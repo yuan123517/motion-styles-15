@@ -176,4 +176,7 @@ addEventListener('resize',fit);fit();
 const q=new URLSearchParams(location.search);const FT=q.has('t')?parseFloat(q.get('t')):null;let t0=null;
 function loop(now){if(t0===null)t0=now;const t=FT!==null?FT:((now-t0)/1000)%DUR;frame(t);if(FT===null)requestAnimationFrame(loop)}
 (document.fonts?document.fonts.ready:Promise.resolve()).then(()=>requestAnimationFrame(loop));
-</script></body></html>
+</script><!-- backlink -->
+<a id="m15back" href="../" style="position:fixed;left:14px;top:12px;z-index:99999;padding:6px 12px;border-radius:999px;background:rgba(10,10,14,.55);color:#fff;font:500 13px/1.2 -apple-system,'PingFang SC','Noto Sans CJK SC',sans-serif;text-decoration:none;backdrop-filter:blur(6px);opacity:0;transition:opacity .35s;pointer-events:none">← 返回总览</a>
+<script>(function(){if(new URLSearchParams(location.search).has('t'))return;var a=document.getElementById('m15back'),h;function s(){a.style.opacity=1;a.style.pointerEvents='auto';clearTimeout(h);h=setTimeout(function(){a.style.opacity=0;a.style.pointerEvents='none'},2200)}addEventListener('mousemove',s);addEventListener('touchstart',s)})();</script>
+</body></html>
