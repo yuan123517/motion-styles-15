@@ -1,0 +1,104 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>05 · Résumé in Numbers</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;margin:-360px 0 0 -640px;overflow:hidden}
+svg{display:block}.big{font-family:"Arial Black","Archivo Black",Impact,sans-serif;font-weight:900;letter-spacing:-0.06em}
+.sm{font-family:Inter,"Helvetica Neue",Arial,sans-serif}</style></head><body><div id="stage">
+<svg id="svg" width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg"></svg></div>
+<script>
+const NS='http://www.w3.org/2000/svg',svg=document.getElementById('svg');
+const O='#FF6A13',K='#0B0B0C',W='#FFFFFF';
+function el(tag,at,parent){const e=document.createElementNS(NS,tag);for(const k in at)e.setAttribute(k,at[k]);(parent||svg).appendChild(e);return e}
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),P=(t,a,d)=>cl((t-a)/d);
+const eOut=x=>1-Math.pow(1-x,3),eOut5=x=>1-Math.pow(1-x,5);
+const eBack=x=>{const c=1.9;return x<=0?0:x>=1?1:1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+const eIO=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+// wipes: start time, color
+const WIPES=[[2.25,O],[4.65,K],[7.05,W],[9.62,K]];
+const defs=el('defs',{});
+el('rect',{width:1280,height:720,fill:K});
+const screens=[];
+function wipePoly(t,t0){const p=eIO(P(t,t0,.38));const L=1280-p*(1280+420+40);return `${L+420},0 1400,0 1400,720 ${L},720`}
+function makeScreen(i,bg){
+  const g=el('g',{});let cp=null;
+  if(i>0){cp=el('clipPath',{id:'cp'+i},defs);const poly=el('polygon',{points:''},cp);g.setAttribute('clip-path',`url(#cp${i})`);g._poly=poly}
+  el('rect',{width:1280,height:720,fill:bg},g);
+  const fg=(bg===W||bg===O)?K:W, dim=bg===W?'#777':bg===O?'rgba(11,11,12,.7)':'#8a8a8a';
+  if(i<4){
+  el('text',{x:64,y:66,class:'sm','font-size':14,'font-weight':600,'letter-spacing':'0.18em',fill:fg},g).textContent='MOTION DESIGNER — RÉSUMÉ 2026';
+  el('text',{x:1216,y:66,class:'sm','font-size':14,'font-weight':600,'letter-spacing':'0.18em',fill:fg,'text-anchor':'end'},g).textContent=`0${i+1} / 04`;
+  el('rect',{x:64,y:82,width:1152,height:1,fill:fg,opacity:.25},g);
+  el('rect',{x:64,y:668,width:1152,height:2,fill:fg,opacity:.18},g);
+  g._prog=el('rect',{x:64,y:667,width:0,height:4,fill:bg===O?K:O},g);
+  }
+  g._fg=fg;g._dim=dim;screens.push(g);return g}
+function smallText(g,lines,x,y,col,size=24){return lines.map((s,k)=>{const e=el('text',{x,y:y+k*(size*1.4),class:'sm','font-size':size,'font-weight':400,fill:col},g);e.textContent=s;return e})}
+function fadeUp(es,t,t0){es.forEach((e,k)=>{const p=eOut(P(t,t0+k*.12,.55));e.setAttribute('opacity',p);e.setAttribute('transform',`translate(0,${(1-p)*26})`)})}
+function popBig(e,t,t0,ox,oy,dur=.55){const p=eBack(P(t,t0,dur));const s=.2+.8*p;e.setAttribute('opacity',cl(P(t,t0,.12)));e.setAttribute('transform',`translate(${ox},${oy}) scale(${s}) translate(${-ox},${-oy})`)}
+// ---------- screen 1
+const s1=makeScreen(0,K);
+const n1=el('text',{x:64,y:420,class:'big','font-size':172,fill:W},s1);
+const t1=smallText(s1,['hours of motion design,','frame by frame, since 2019'],70,500,'#BDBDBD');
+const dots=[];for(let r=0;r<11;r++)for(let c=0;c<14;c++){dots.push({c,r,e:el('circle',{cx:816+c*28,cy:228+r*28,r:0,fill:O},s1)})}
+// ---------- screen 2
+const s2=makeScreen(1,O);
+const d1=el('text',{x:64,y:420,class:'big','font-size':190,fill:W},s2);d1.textContent='1';
+const arr=el('path',{d:'M215 352 H395 M365 322 L398 352 L365 382',fill:'none',stroke:W,'stroke-width':16,'stroke-linecap':'square','stroke-linejoin':'miter'},s2);
+const d15=el('text',{x:420,y:420,class:'big','font-size':190,fill:W},s2);d15.textContent='15';
+const bars=[];for(let i=0;i<15;i++){const h=24+i*17.5;bars.push({h,e:el('rect',{x:816+i*26,y:520,width:18,height:0,fill:i===0?W:K},s2)})}
+el('rect',{x:816,y:521,width:384,height:2,fill:K,opacity:.35},s2);
+const t2=smallText(s2,['motion styles in one video,','scaled from one'],70,500,K);
+// ---------- screen 3
+const s3=makeScreen(2,K);
+const n3=el('text',{x:64,y:420,class:'big','font-size':172,fill:W},s3);
+el('circle',{cx:1010,cy:372,r:140,fill:'none',stroke:'#222',"stroke-width":22},s3);
+const ring=el('circle',{cx:1010,cy:372,r:140,fill:'none',stroke:O,'stroke-width':22,'stroke-linecap':'round',transform:'rotate(-90 1010 372)','stroke-dasharray':`0 ${2*Math.PI*140}`},s3);
+const rn=el('text',{x:1010,y:386,class:'big','font-size':64,fill:W,'text-anchor':'middle'},s3);rn.textContent='320';
+const rl=el('text',{x:1010,y:420,class:'sm','font-size':15,'font-weight':600,'letter-spacing':'0.3em',fill:'#9a9a9a','text-anchor':'middle'},s3);rl.textContent='PROJECTS';
+const t3=smallText(s3,['on-time delivery,','across 320 projects'],70,500,'#BDBDBD');
+// ---------- screen 4
+const s4=makeScreen(3,W);
+const n4=el('text',{x:64,y:420,class:'big','font-size':200,fill:K},s4);n4.textContent='32+';
+const t4=smallText(s4,["brands, studios and channels","I've helped move"],70,500,'#555');
+const cta=el('text',{x:70,y:610,class:'sm','font-size':30,'font-weight':800,'letter-spacing':'0.04em',fill:K},s4);cta.textContent="LET'S MAKE IT MOVE →";
+const ctaL=el('rect',{x:70,y:628,width:0,height:6,fill:O},s4);
+const sq=[];for(let r=0;r<4;r++)for(let c=0;c<8;c++)sq.push({c,r,e:el('rect',{x:0,y:0,width:36,height:36,fill:K},s4)});
+// ---------- loop wipe
+const s5=makeScreen(4,K);
+function fmt(n){return Math.round(n).toLocaleString('en-US')}
+function render(t){
+  // wipes
+  [s2,s3,s4,s5].forEach((g,k)=>{const t0=WIPES[k][0];g.setAttribute('display',t>=t0?'inline':'none');g._poly.setAttribute('points',wipePoly(t,t0))});
+  // progress per page
+  const st=[0,2.25,4.65,7.05,10];
+  [s1,s2,s3,s4].forEach((g,k)=>{const p=k/4+cl((t-st[k])/(st[k+1]-st[k]))/4;g._prog.setAttribute('width',1152*cl(p))});
+  // s1
+  n1.textContent=fmt(2400*eOut5(P(t,.15,1.5)))+(t>.2?'+':'');popBig(n1,t,.1,64,420,.6);
+  fadeUp(t1,t,.7);
+  dots.forEach(d=>{const dl=.35+(d.c+(10-d.r))*.035;const p=eBack(P(t,dl,.4));d.e.setAttribute('r',Math.max(0,7.5*p))});
+  // s2
+  if(t>=2.25){const a=2.55;popBig(d1,t,a,140,350,.5);
+    const ap=eOut(P(t,2.95,.35));arr.setAttribute('stroke-dasharray','400');arr.setAttribute('stroke-dashoffset',400*(1-ap));
+    popBig(d15,t,3.3,560,350,.55);
+    bars.forEach((b,i)=>{const p=eBack(P(t,3.35+i*.06,.45));const h=b.h*p;b.e.setAttribute('height',Math.max(0,h));b.e.setAttribute('y',520-Math.max(0,h))});
+    fadeUp(t2,t,3.6)}
+  // s3
+  if(t>=4.65){const p=eOut5(P(t,4.85,1.6));n3.textContent=(99.4*p).toFixed(1)+'%';popBig(n3,t,4.8,64,420,.5);
+    const rp=eOut(P(t,4.95,1.7));const C=2*Math.PI*140;ring.setAttribute('stroke-dasharray',`${C*rp} ${C}`);
+    rn.textContent=Math.round(320*rp);[rn,rl].forEach(e=>e.setAttribute('opacity',cl(P(t,5,.4))));
+    fadeUp(t3,t,5.4)}
+  // s4
+  if(t>=7.05){popBig(n4,t,7.3,200,350,.6);fadeUp(t4,t,7.7);
+    const cp=eOut(P(t,8.2,.5));cta.setAttribute('opacity',cp);cta.setAttribute('transform',`translate(0,${(1-cp)*24})`);
+    ctaL.setAttribute('width',420*eIO(P(t,8.6,.7)));
+    sq.forEach(s=>{const p=eBack(P(t,7.6+(s.c+s.r)*.05,.4));const x=860+s.c*44,y=262+s.r*44,z=36*p;s.e.setAttribute('x',x+18-z/2);s.e.setAttribute('y',y+18-z/2);s.e.setAttribute('width',Math.max(0,z));s.e.setAttribute('height',Math.max(0,z));s.e.setAttribute('fill',(s.r===1&&s.c===5)?O:K)})}
+}
+const Q=new URLSearchParams(location.search),FIX=Q.has('t')?parseFloat(Q.get('t')):null;
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);document.getElementById('stage').style.transform='scale('+s+')'}
+addEventListener('resize',fit);fit();
+let T0=null;function tick(now){if(T0===null)T0=now;const t=FIX!==null?FIX:((now-T0)/1000)%10;render(t);if(FIX===null)requestAnimationFrame(tick);else window.__ready=true}
+document.fonts.ready.then(()=>requestAnimationFrame(tick));
+</script><!-- backlink -->
+<a id="m15back" href="../" style="position:fixed;left:14px;top:12px;z-index:99999;padding:6px 12px;border-radius:999px;background:rgba(10,10,14,.55);color:#fff;font:500 13px/1.2 -apple-system,'PingFang SC','Noto Sans CJK SC',sans-serif;text-decoration:none;backdrop-filter:blur(6px);opacity:0;transition:opacity .35s;pointer-events:none">← 返回总览</a>
+<script>(function(){if(new URLSearchParams(location.search).has('t'))return;var a=document.getElementById('m15back'),h;function s(){a.style.opacity=1;a.style.pointerEvents='auto';clearTimeout(h);h=setTimeout(function(){a.style.opacity=0;a.style.pointerEvents='none'},2200)}addEventListener('mousemove',s);addEventListener('touchstart',s)})();</script>
+</body></html>

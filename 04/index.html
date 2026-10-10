@@ -1,0 +1,137 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>04 · Poster Breaks the Frame</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@500;700;900&display=swap" rel="stylesheet">
+<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;margin:-360px 0 0 -640px;overflow:hidden}
+svg{display:block}.imp{font-family:Impact,"Helvetica Neue Condensed Black",Anton,"Arial Black",sans-serif}.sm{font-family:"Helvetica Neue",Helvetica,Inter,Arial,sans-serif;font-weight:700}</style></head><body><div id="stage">
+<svg id="svg" width="1280" height="720" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"></svg></div>
+<script>
+const NS='http://www.w3.org/2000/svg',XL='http://www.w3.org/1999/xlink',svg=document.getElementById('svg');
+const PA='#EFECE4',R='#E63322',B='#1F4CC9',Y='#F6C20F',K='#111111';
+function el(tag,at,p){const e=document.createElementNS(NS,tag);for(const k in at){if(k==='href')e.setAttributeNS(XL,'href',at[k]);else e.setAttribute(k,at[k])}(p||svg).appendChild(e);return e}
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),P=(t,a,d)=>cl((t-a)/d),L=(a,b,p)=>a+(b-a)*p;
+const eOut=x=>1-Math.pow(1-x,3),eIn=x=>x*x*x,eIO=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const eBack=x=>{const c=2.2;return x<=0?0:x>=1?1:1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+const eElastic=x=>x<=0?0:x>=1?1:Math.pow(2,-9*x)*Math.sin((x*10-.75)*2*Math.PI/3)+1;
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const rnd=rng(404);
+const defs=el('defs',{});
+function grid(g){for(let x=80;x<1280;x+=80)el('line',{x1:x,y1:0,x2:x,y2:720,stroke:K,'stroke-width':.6,opacity:.13},g);for(let y=80;y<720;y+=80)el('line',{x1:0,y1:y,x2:1280,y2:y,stroke:K,'stroke-width':.6,opacity:.13},g)}
+function typed(g,x,y,str,anchor='start',size=12){const e=el('text',{x,y,class:'sm','font-size':size,'letter-spacing':'0.14em',fill:K,'text-anchor':anchor},g);e._s=str;return e}
+// ================= POSTER 1 (in defs, reused by shards)
+const poster=el('g',{id:'poster'},defs);
+el('rect',{width:1280,height:720,fill:PA},poster);grid(poster);
+const yel=el('rect',{x:0,y:0,width:170,height:170,fill:Y},poster);
+const red=el('circle',{cx:0,cy:0,r:175,fill:R},poster);
+const blu=el('rect',{x:0,y:0,width:430,height:190,fill:B},poster);
+const letters=['R','U','N'].map((c,i)=>{const g=el('g',{},poster);const e=el('text',{x:0,y:0,class:'imp','font-size':400,fill:K,'text-anchor':'middle'},g);e.textContent=c;return g});
+const frame1=el('path',{fill:'none',stroke:K,'stroke-width':3},poster);
+const cracks=[];for(let i=0;i<7;i++){let x=1240,y=150+i*70+rnd()*30,pts=[[x,y]];for(let k=0;k<6;k++){x-=30+rnd()*45;y+=(rnd()-.5)*70;pts.push([x,y])}
+  const e=el('polyline',{points:pts.map(p=>p.join(',')).join(' '),fill:'none',stroke:K,'stroke-width':2.2,'stroke-linejoin':'bevel'},poster);
+  let len=0;for(let k=1;k<pts.length;k++)len+=Math.hypot(pts[k][0]-pts[k-1][0],pts[k][1]-pts[k-1][1]);cracks.push({e,len,d:rnd()*.4,y0:pts[0][1]})}
+const tx1=[typed(poster,58,30,'POSTER IN MOTION'),typed(poster,1222,30,'Nº04 / 2026','end'),typed(poster,58,702,'INTERNATIONAL TYPOGRAPHIC STYLE'),typed(poster,1222,702,'R—U—N  /  ISSUE 04','end')];
+// main view
+const mainUse=el('use',{href:'#poster'});
+// ================= shards
+const shardLayer=el('g',{});
+const C=6,RW=5,cw=1280/C,ch=720/RW;const V=[];
+for(let j=0;j<=RW;j++){V[j]=[];for(let i=0;i<=C;i++){let x=i*cw,y=j*ch;if(i>0&&i<C)x+=(rnd()-.5)*cw*.6;if(j>0&&j<RW)y+=(rnd()-.5)*ch*.6;V[j][i]=[x,y]}}
+const shards=[];let sid=0;
+for(let j=0;j<RW;j++)for(let i=0;i<C;i++){const a=V[j][i],b=V[j][i+1],c=V[j+1][i+1],d=V[j+1][i];const tris=(i+j)%2?[[a,b,c],[a,c,d]]:[[a,b,d],[b,c,d]];
+  for(const tr of tris){const cp=el('clipPath',{id:'s'+sid},defs);el('polygon',{points:tr.map(p=>p.join(',')).join(' ')},cp);
+    const cx=(tr[0][0]+tr[1][0]+tr[2][0])/3,cy=(tr[0][1]+tr[1][1]+tr[2][1])/3;
+    let dx=cx-520,dy=cy-360;const m=Math.hypot(dx,dy)||1;dx/=m;dy/=m;
+    const sp=1300+rnd()*1500;const vx=dx*sp*.7+(rnd()-.2)*600,vy=dy*sp*.8+(rnd()-.5)*600;
+    const copies=[];for(let k=3;k>=0;k--){const g=el('g',{opacity:k?[0,.3,.17,.08][k]:1},shardLayer);const inner=el('g',{'clip-path':`url(#s${sid})`},g);const u=el('use',{},inner);copies.push({g,k,u})}
+    shards.push({cx,cy,vx,vy,rot:(rnd()-.5)*900,copies,del:rnd()*.08});sid++}}
+// ================= color panels
+const panels=[[Y,'RUN',K],[B,'FAST',PA],[R,'BOLD',PA]].map(([bg,w,fc])=>{const g=el('g',{});el('rect',{width:1280,height:720,fill:bg},g);
+  const tg=el('g',{},g);const e=el('text',{x:640,y:560,class:'imp','font-size':520,fill:fc,'text-anchor':'middle','letter-spacing':'-0.01em'},tg);e.textContent=w;
+  el('text',{x:58,y:44,class:'sm','font-size':12,'letter-spacing':'0.14em',fill:fc},g).textContent='POSTER IN MOTION';
+  el('text',{x:1222,y:44,class:'sm','font-size':12,'letter-spacing':'0.14em',fill:fc,'text-anchor':'end'},g).textContent='Nº04 / 2026';return {g,tg}});
+// ================= FINAL poster
+const fin=el('g',{});
+el('rect',{width:1280,height:720,fill:PA},fin);grid(fin);
+const fYel=el('rect',{x:0,y:0,width:200,height:200,fill:Y},fin);
+const fBlu=el('rect',{x:0,y:0,width:380,height:150,fill:B},fin);
+const fRedGhosts=[3,2,1].map(k=>el('circle',{r:150,fill:R,opacity:[0,.25,.14,.07][k]},fin));
+const fRedG=el('g',{},fin);el('circle',{cx:0,cy:0,r:150,fill:R},fRedG);el('rect',{x:-150,y:-5,width:300,height:10,fill:PA,opacity:.9},fRedG);
+const fBreak=el('text',{x:80,y:330,class:'imp','font-size':300,fill:K,'letter-spacing':'-0.01em'},fin);fBreak.textContent='BREAK';
+const fFrame=el('text',{x:86,y:470,class:'imp','font-size':128,fill:R},fin);fFrame.textContent='THE FRAME.';
+// frame segments with gaps
+const fr={};['t1','t2','b1','b2','r1','r2','l'].forEach(k=>fr[k]=el('line',{stroke:K,'stroke-width':3,'stroke-linecap':'butt'},fin));
+const frags=[];function addFrag(x,y,dir,n){for(let i=0;i<n;i++){const e=el('line',{stroke:K,'stroke-width':3},fin);frags.push({e,x,y,ang:dir+(rnd()-.5)*1.6,sp:180+rnd()*260,len:14+rnd()*22,spin:(rnd()-.5)*12,off:(rnd()-.5)*80})}}
+const YX=980,BX=660,RYc=420;
+addFrag(YX+100,40,-Math.PI/2,6);addFrag(BX+190,680,Math.PI/2,6);addFrag(1240,RYc,0,6);
+frags.forEach((f,i)=>f.t0=i<6?6.45:i<12?6.95:7.55);
+const ftx=[typed(fin,58,30,'POSTER IN MOTION'),typed(fin,1222,30,'Nº04 / 2026','end'),typed(fin,58,702,'TYPE AND SHAPES REFUSE THE GRID',"start"),typed(fin,1222,702,'MOVES','end',22)];
+const flash=el('rect',{width:1280,height:720,fill:'#fff',opacity:0});
+const fade=el('rect',{width:1280,height:720,fill:PA,opacity:0});
+function typeIn(es,t,t0,cps=40){es.forEach((e,k)=>{const n=Math.floor(Math.max(0,t-t0-k*.08)*cps);e.textContent=e._s.slice(0,n)+(n>0&&n<e._s.length?'▌':'')})}
+function render(t){
+  // ---------- poster 1 states
+  const fp=eIO(P(t,0,.45));const per=2*(1200+640);
+  const push=t<3.4?eIO(P(t,2.1,1.25)):1;
+  const b=push*62+(t>2.1?Math.sin(t*40)*push*4:0);
+  frame1.setAttribute('d',`M40 40 H1240 Q${1240+b} 360 1240 680 H40 Z`);frame1.setAttribute('stroke-dasharray',per);frame1.setAttribute('stroke-dashoffset',per*(1-fp));
+  const dropIn=(t0,dy)=>{const p=eBack(P(t,t0,.35));return (1-p)*dy};
+  yel.setAttribute('x',150);yel.setAttribute('y',110-dropIn(.15,-500)*-1);
+  red.setAttribute('cx',880);red.setAttribute('cy',270+dropIn(.25,-700)*1);red.setAttribute('r',175*cl(P(t,.25,.05)?1:0));
+  blu.setAttribute('x',690+dropIn(.35,700));blu.setAttribute('y',430);
+  yel.setAttribute('y',110+dropIn(.15,-500));
+  typeIn(tx1,t,.2,45);
+  const lx=[250,500,750],lt=[1.0,1.29,1.58];
+  letters.forEach((g,i)=>{const t0=lt[i];let tr='';if(t<t0){g.setAttribute('opacity',0);return}g.setAttribute('opacity',1);
+    const fall=cl((t-t0)/.12);const y=600-(1-eIn(fall))*700;let sx=1,sy=1;
+    if(fall>=1){const q=t-t0-.12;const sq=Math.exp(-q*9)*Math.cos(q*28);sx=1+.28*sq;sy=1-.3*sq}
+    const px=push*(70+i*25),pxs=1+push*.12;
+    tr=`translate(${lx[i]+px},${y}) scale(${sx*pxs},${sy})`;g.setAttribute('transform',tr);g.firstChild.setAttribute('y',0)});
+  cracks.forEach(c=>{const p=eOut(P(t,2.3+c.d,.9));c.e.setAttribute('stroke-dasharray',c.len);c.e.setAttribute('stroke-dashoffset',c.len*(1-p));c.e.setAttribute('opacity',p>0?1:0);c.e.setAttribute('transform',`translate(${b*Math.max(0,1-Math.abs(c.y0-360)/360)},0)`)});
+  // shake before break
+  const shk=t>2.1&&t<3.4?push*push*5:0;
+  mainUse.setAttribute('transform',`translate(${Math.sin(t*93)*shk},${Math.cos(t*71)*shk})`);
+  mainUse.setAttribute('display',t<3.4?'inline':'none');
+  // ---------- shatter 3.4–3.95
+  const sh=t>=3.4&&t<3.95;shardLayer.setAttribute('display',sh?'inline':'none');
+  if(sh!==window.__sh){window.__sh=sh;shards.forEach(s=>s.copies.forEach(c=>{if(sh)c.u.setAttributeNS(XL,'href','#poster');else c.u.removeAttributeNS(XL,'href')}))}
+  if(sh){shards.forEach(s=>{s.copies.forEach(c=>{const tt=Math.max(0,t-3.4-s.del-c.k*.022);const d=tt+tt*tt*1.6;
+    const x=s.vx*d,y=s.vy*d+500*tt*tt,r=s.rot*d,sc=1+tt*.5;
+    c.g.setAttribute('transform',`translate(${s.cx+x},${s.cy+y}) rotate(${r}) scale(${sc}) translate(${-s.cx},${-s.cy})`)})})}
+  svg.style.background=sh?'#D8D3C7':'';flash.setAttribute('opacity',t>=3.4&&t<3.47?.85:0);
+  // flash at break
+  // ---------- panels
+  panels.forEach((p,i)=>{const t0=3.95+i*.5;const on=t>=t0&&t<t0+.5&&t<5.45+(i==2?.1:0);p.g.setAttribute('display',on?'inline':'none');
+    if(on){const q=t-t0;const s=1+.35*Math.exp(-q*14)*Math.cos(q*30)+ (1-eOut(cl(q/.12)))*.6;p.tg.setAttribute('transform',`translate(640,380) scale(${s}) translate(-640,-380)`)}});
+  // ---------- final
+  const F=t>=5.55;fin.setAttribute('display',F?'inline':'none');
+  if(F){
+    const fbp=eBack(P(t,5.7,.4));fBreak.setAttribute('transform',`translate(0,${(1-fbp)*-500})`);fBreak.setAttribute('opacity',cl(P(t,5.7,.05)));
+    const ffp=eBack(P(t,6.0,.4));fFrame.setAttribute('transform',`translate(${(1-ffp)*-900},0)`);
+    // yellow up through top 6.2→6.45
+    const yp=eBack(P(t,6.15,.5));fYel.setAttribute('x',YX);fYel.setAttribute('y',L(560,-60,yp));
+    const bp=eBack(P(t,6.65,.5));fBlu.setAttribute('x',BX);fBlu.setAttribute('y',L(470,612,bp));fBlu.setAttribute('opacity',cl(P(t,6.65,.06)));
+    const rp=eOut(P(t,7.1,.9));const rx=L(560,1240,rp);const rot=(rx-560)/150*57.3;
+    fRedG.setAttribute('transform',`translate(${rx},${RYc}) rotate(${rot})`);fRedG.setAttribute('opacity',t>=7.05?1:0);
+    fRedGhosts.forEach((g,i)=>{const k=3-i;const q=eOut(P(t-k*.035,7.1,.9));g.setAttribute('cx',L(560,1240,q));g.setAttribute('cy',RYc);g.setAttribute('opacity',t>7.1&&rp<.98?[0,.25,.14,.07][k]:0)});
+    // frame draw then gaps
+    const dp=eIO(P(t,5.55,.35));const gT=t>6.45,gB=t>6.95,gR=t>7.55;
+    const ln=(e,x1,y1,x2,y2)=>{e.setAttribute('x1',x1);e.setAttribute('y1',y1);e.setAttribute('x2',L(x1,x2,dp));e.setAttribute('y2',L(y1,y2,dp))};
+    ln(fr.t1,40,40,gT?YX-14:1240,40);ln(fr.t2,gT?YX+214:1240,40,1240,40);
+    ln(fr.b1,40,680,gB?BX-14:1240,680);ln(fr.b2,gB?BX+394:1240,680,1240,680);
+    ln(fr.r1,1240,40,1240,gR?RYc-170:680);ln(fr.r2,1240,gR?RYc+170:680,1240,680);ln(fr.l,40,680,40,40);
+    frags.forEach(f=>{const q=t-f.t0;if(q<0){f.e.setAttribute('opacity',0);return}const x=f.x+f.off*(Math.abs(Math.cos(f.ang))<.5?1:0)+Math.cos(f.ang)*f.sp*q,y=f.y+f.off*(Math.abs(Math.cos(f.ang))>=.5?1:0)+Math.sin(f.ang)*f.sp*q+380*q*q;const a=f.spin*q;
+      f.e.setAttribute('x1',x);f.e.setAttribute('y1',y);f.e.setAttribute('x2',x+Math.cos(a)*f.len);f.e.setAttribute('y2',y+Math.sin(a)*f.len);f.e.setAttribute('opacity',cl(1-q/1.4))});
+    // screen shake on impacts
+    let s=0;[6.45,6.95,7.55].forEach(ti=>{const q=t-ti;if(q>0)s+=8*Math.exp(-q*10)});fin.setAttribute('transform',`translate(${Math.sin(t*97)*s},${Math.cos(t*83)*s})`);
+    typeIn(ftx,t,7.9,40);
+  }
+  fade.setAttribute('opacity',cl(P(t,9.7,.3)));
+}
+const Q=new URLSearchParams(location.search),FIX=Q.has('t')?parseFloat(Q.get('t')):null;
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);document.getElementById('stage').style.transform='scale('+s+')'}
+addEventListener('resize',fit);fit();
+let T0=null;function tick(now){if(T0===null)T0=now;const t=FIX!==null?FIX:((now-T0)/1000)%10;render(t);if(FIX===null)requestAnimationFrame(tick);else window.__ready=true}
+document.fonts.ready.then(()=>requestAnimationFrame(tick));
+</script><!-- backlink -->
+<a id="m15back" href="../" style="position:fixed;left:14px;top:12px;z-index:99999;padding:6px 12px;border-radius:999px;background:rgba(10,10,14,.55);color:#fff;font:500 13px/1.2 -apple-system,'PingFang SC','Noto Sans CJK SC',sans-serif;text-decoration:none;backdrop-filter:blur(6px);opacity:0;transition:opacity .35s;pointer-events:none">← 返回总览</a>
+<script>(function(){if(new URLSearchParams(location.search).has('t'))return;var a=document.getElementById('m15back'),h;function s(){a.style.opacity=1;a.style.pointerEvents='auto';clearTimeout(h);h=setTimeout(function(){a.style.opacity=0;a.style.pointerEvents='none'},2200)}addEventListener('mousemove',s);addEventListener('touchstart',s)})();</script>
+</body></html>

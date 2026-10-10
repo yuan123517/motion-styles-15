@@ -1,0 +1,38 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>15 种网页动效风格</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b0b10;color:#eceaf2;font-family:-apple-system,"PingFang SC","Hiragino Sans GB","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
+body:before{content:"";position:fixed;inset:0;background:radial-gradient(60% 50% at 15% 0%,rgba(108,99,255,.22),transparent 70%),radial-gradient(50% 40% at 90% 10%,rgba(255,106,19,.14),transparent 70%);pointer-events:none}
+header{position:relative;max-width:1280px;margin:0 auto;padding:72px 32px 36px}
+.kick{font:600 12px/1 ui-monospace,Menlo,monospace;letter-spacing:.3em;color:#9b95ff}
+h1{font-size:clamp(36px,6vw,68px);margin:16px 0 14px;letter-spacing:-.02em;font-weight:800}h1 em{font-style:normal;background:linear-gradient(90deg,#9b95ff,#ff8a4c);-webkit-background-clip:text;color:transparent}
+.sub{color:#a6a3b4;font-size:16px;line-height:1.7;max-width:720px}
+.stats{display:flex;gap:28px;margin-top:26px;color:#cfcbe0;font-size:13px}.stats b{display:block;font-size:26px;color:#fff}
+main{position:relative;max-width:1280px;margin:0 auto;padding:8px 32px 80px;display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:26px}
+.card{display:block;color:inherit;text-decoration:none;background:#15151d;border:1px solid #262634;border-radius:18px;overflow:hidden;transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .3s,box-shadow .35s}
+.card:hover{transform:translateY(-6px);border-color:#4b46a8;box-shadow:0 22px 50px -18px rgba(108,99,255,.45)}
+.th{position:relative;aspect-ratio:16/9;overflow:hidden;background:#000}.th img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s}.card:hover img{transform:scale(1.05)}
+.th i{position:absolute;right:14px;bottom:12px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.92);color:#111;display:grid;place-items:center;font-style:normal;font-size:14px;opacity:0;transform:scale(.8);transition:.3s}.card:hover .th i{opacity:1;transform:none}
+.meta{display:flex;gap:16px;padding:18px 20px 20px}.meta>b{font:700 30px/1 ui-monospace,Menlo,monospace;color:#5f5b78}.card:hover .meta>b{color:#9b95ff}
+h3{margin:2px 0 8px;font-size:19px}.meta p{display:none}.tags{display:flex;flex-wrap:wrap;gap:6px}.tags span{font-size:12px;color:#bdb9cf;background:#1f1f2b;border:1px solid #2c2c3c;padding:3px 9px;border-radius:999px}
+footer{text-align:center;color:#6b6880;font-size:12px;padding:0 0 40px}
+</style></head><body>
+<header><div class="kick">WEB MOTION · 15 STYLES</div><h1>15 种<em>网页动效风格</em></h1>
+<p class="sub">每一支都是单个 HTML 文件、纯代码实时渲染的 10 秒 1280×720 循环短片，无视频素材。点开卡片即可全屏观看。</p>
+<div class="stats"><div><b>15</b>种风格</div><div><b>10s</b>循环</div><div><b>16:9</b>1280×720</div><div><b>0</b>视频素材</div></div></header>
+<main>
+<a class="card" href="./01/"><div class="th"><img src="thumbs/01.jpg" alt="暖色涂鸦绘本" loading="lazy"><i>▶</i></div><div class="meta"><b>01</b><div><h3>暖色涂鸦绘本</h3><p>适合：</p><div class="tags"><span>儿童</span><span>母婴早教</span><span>公益故事</span></div></div></div></a>
+<a class="card" href="./02/"><div class="th"><img src="thumbs/02.jpg" alt="梵高油画世界" loading="lazy"><i>▶</i></div><div class="meta"><b>02</b><div><h3>梵高油画世界</h3><p>适合：</p><div class="tags"><span>艺术展览</span><span>文旅</span><span>品牌故事</span></div></div></div></a>
+<a class="card" href="./03/"><div class="th"><img src="thumbs/03.jpg" alt="沙画" loading="lazy"><i>▶</i></div><div class="meta"><b>03</b><div><h3>沙画</h3><p>适合：</p><div class="tags"><span>讲历史</span><span>城市文旅</span><span>纪念日</span></div></div></div></a>
+<a class="card" href="./04/"><div class="th"><img src="thumbs/04.jpg" alt="海报破框" loading="lazy"><i>▶</i></div><div class="meta"><b>04</b><div><h3>海报破框</h3><p>适合：</p><div class="tags"><span>运动潮牌</span><span>新品首发</span><span>活动海报</span></div></div></div></a>
+<a class="card" href="./05/"><div class="th"><img src="thumbs/05.jpg" alt="橙色数据大字" loading="lazy"><i>▶</i></div><div class="meta"><b>05</b><div><h3>橙色数据大字</h3><p>适合：</p><div class="tags"><span>个人简历</span><span>年度报告</span><span>数据海报</span></div></div></div></a>
+<a class="card" href="./06/"><div class="th"><img src="thumbs/06.jpg" alt="新粗野主义图解" loading="lazy"><i>▶</i></div><div class="meta"><b>06</b><div><h3>新粗野主义图解</h3><p>适合：</p><div class="tags"><span>产品讲解</span><span>数据报告</span><span>调研结果</span></div></div></div></a>
+<a class="card" href="./07/"><div class="th"><img src="thumbs/07.jpg" alt="动效曲线讲解" loading="lazy"><i>▶</i></div><div class="meta"><b>07</b><div><h3>动效曲线讲解</h3><p>适合：</p><div class="tags"><span>设计教学</span><span>动效科普</span><span>产品体验讲解</span></div></div></div></a>
+<a class="card" href="./08/"><div class="th"><img src="thumbs/08.jpg" alt="胶片隧道" loading="lazy"><i>▶</i></div><div class="meta"><b>08</b><div><h3>胶片隧道</h3><p>适合：</p><div class="tags"><span>影视作品集</span><span>婚庆摄影</span><span>年度回顾</span></div></div></div></a>
+<a class="card" href="./09/"><div class="th"><img src="thumbs/09.jpg" alt="交易终端缩放" loading="lazy"><i>▶</i></div><div class="meta"><b>09</b><div><h3>交易终端缩放</h3><p>适合：</p><div class="tags"><span>金融演示</span><span>数据产品</span><span>行情 App</span></div></div></div></a>
+<a class="card" href="./10/"><div class="th"><img src="thumbs/10.jpg" alt="配方图解" loading="lazy"><i>▶</i></div><div class="meta"><b>10</b><div><h3>配方图解</h3><p>适合：</p><div class="tags"><span>餐饮茶饮</span><span>美食教程</span><span>门店菜单屏</span></div></div></div></a>
+<a class="card" href="./11/"><div class="th"><img src="thumbs/11.jpg" alt="点阵地图数据片" loading="lazy"><i>▶</i></div><div class="meta"><b>11</b><div><h3>点阵地图数据片</h3><p>适合：</p><div class="tags"><span>App 功能演示</span><span>出海业务</span><span>物流</span></div></div></div></a>
+<a class="card" href="./12/"><div class="th"><img src="thumbs/12.jpg" alt="星球电影感" loading="lazy"><i>▶</i></div><div class="meta"><b>12</b><div><h3>星球电影感</h3><p>适合：</p><div class="tags"><span>科技品牌大片</span><span>航天科普</span><span>高端品牌</span></div></div></div></a>
+<a class="card" href="./13/"><div class="th"><img src="thumbs/13.jpg" alt="体育转播包装" loading="lazy"><i>▶</i></div><div class="meta"><b>13</b><div><h3>体育转播包装</h3><p>适合：</p><div class="tags"><span>电竞赛事</span><span>体育健身</span><span>直播开场</span></div></div></div></a>
+<a class="card" href="./14/"><div class="th"><img src="thumbs/14.jpg" alt="SaaS 产品发布片" loading="lazy"><i>▶</i></div><div class="meta"><b>14</b><div><h3>SaaS 产品发布片</h3><p>适合：</p><div class="tags"><span>软件发布</span><span>互联网产品</span><span>功能更新</span></div></div></div></a>
+<a class="card" href="./15/"><div class="th"><img src="thumbs/15.jpg" alt="手绘漫画分格" loading="lazy"><i>▶</i></div><div class="meta"><b>15</b><div><h3>手绘漫画分格</h3><p>适合：</p><div class="tags"><span>服务流程介绍</span><span>AI 工具讲解</span><span>轻松科普</span></div></div></div></a>
+</main><footer>单文件 HTML · SVG / Canvas / CSS 实时渲染</footer></body></html>

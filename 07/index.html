@@ -1,0 +1,181 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>07 · Motion Curves Explained</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Anton&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden}
+#wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#stage{width:1280px;height:720px;position:relative;flex:none;overflow:hidden;background:#1B1B1F}
+#svg{position:absolute;inset:0}
+#spinBox{position:absolute;left:0;top:0;width:1280px;height:720px;perspective:1100px;pointer-events:none}
+#spin{position:absolute;left:0;top:0;width:1280px;text-align:center;font:250px/1 Impact,Anton,'Haettenschweiler','Arial Narrow Bold',sans-serif;color:#fff;letter-spacing:2px;backface-visibility:visible;transform-style:preserve-3d;display:none}
+#top{position:absolute;inset:0;pointer-events:none}
+</style></head><body><div id="wrap"><div id="stage">
+<svg id="svg" width="1280" height="720" viewBox="0 0 1280 720"><defs>
+<filter id="mb" x="-50%" y="-20%" width="200%" height="140%"><feGaussianBlur id="mbB" stdDeviation="0 0"/></filter>
+</defs><g id="dyn"></g></svg>
+<div id="spinBox"><div id="spin">SPIN</div></div>
+<svg id="top" width="1280" height="720" viewBox="0 0 1280 720"><g id="ov"></g></svg>
+</div></div>
+<script>
+const W=1280,H=720,DUR=10,FPS=30;
+const IMP="Impact,Anton,'Haettenschweiler','Arial Narrow Bold',sans-serif";
+const HAND="'Bradley Hand','Noteworthy','Caveat','Patrick Hand','Kalam',cursive";
+const MONO="'SF Mono',Menlo,'JetBrains Mono','IBM Plex Mono',monospace";
+const BLUE='#3B7BFF',RED='#FF3B47',PUR='#8B5CF6';
+const cl=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)),lerp=(a,b,u)=>a+(b-a)*u,P=(t,a,b)=>cl((t-a)/(b-a));
+const eo=u=>1-Math.pow(1-cl(u),3),eio=u=>{u=cl(u);return u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2};
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H);document.getElementById('stage').style.transform=`scale(${s})`}
+addEventListener('resize',fit);fit();
+const $=id=>document.getElementById(id);
+// bezier
+function bez(p1x,p1y,p2x,p2y){const cx=3*p1x,bx=3*(p2x-p1x)-cx,ax=1-cx-bx,cy=3*p1y,by=3*(p2y-p1y)-cy,ay=1-cy-by;
+ const X=s=>((ax*s+bx)*s+cx)*s,Y=s=>((ay*s+by)*s+cy)*s;
+ return x=>{let lo=0,hi=1,s=x;for(let i=0;i<30;i++){const v=X(s);if(Math.abs(v-x)<1e-5)break;if(v<x)lo=s;else hi=s;s=(lo+hi)/2}return Y(s)}}
+const easeIO=bez(.42,0,.58,1);
+const spring=u=>1-Math.exp(-5*u)*Math.cos(9*u);
+// handwriting reveal: clip rect grows
+function hand(x,y,txt,col,t,t0,size=34,dur=0.6,rot=-4){const k=P(t,t0,t0+dur);if(k<=0)return'';const id='c'+Math.round(x)+'_'+Math.round(y);
+ return `<clipPath id="${id}"><rect x="${x-10}" y="${y-size*1.2}" width="${(txt.length*size*0.55+30)*eo(k)}" height="${size*1.8}"/></clipPath><g transform="rotate(${rot} ${x} ${y})" clip-path="url(#${id})"><text x="${x}" y="${y}" font-family="${HAND}" font-weight="700" font-size="${size}" fill="${col}">${txt}</text></g>`}
+function tc(t,light){const f=Math.floor(t*FPS);const ss=Math.floor(f/FPS),ff=f%FPS;const p=n=>String(n).padStart(2,'0');
+ return `<text x="1240" y="44" text-anchor="end" font-family="${MONO}" font-size="20" font-weight="700" fill="${light?'#1B1B1F':'#EDEDED'}">00:00:${p(ss)}:${p(ff)}</text><circle cx="1068" cy="37" r="6" fill="${RED}" opacity="${Math.floor(t*2)%2?1:.35}"/>`}
+const KEYS=[0,0.55,1,1.85,2,2.3,2.6,2.95,3.4,4,5,5.15,5.4,6,7,7.05,7.3,7.9,9];
+function timeline(t,light){const x0=90,x1=1190,y=676,ink=light?'#1B1B1F':'#DADADA',dim=light?'#BDBDBD':'#3A3A42';
+ let o=`<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="${dim}" stroke-width="2"/>`;
+ const xs=v=>x0+(x1-x0)*v/DUR;
+ o+=`<rect x="${xs(0)}" y="${y-30}" width="${xs(2.95)-xs(0)-4}" height="18" rx="3" fill="${light?'#D6D6D6':'#2A2A31'}"/><text x="${xs(0)+8}" y="${y-16}" font-family="${MONO}" font-size="12" fill="${ink}">type</text>`;
+ o+=`<rect x="${xs(2.95)}" y="${y-30}" width="${xs(10)-xs(2.95)}" height="18" rx="3" fill="${light?'#D6D6D6':'#2A2A31'}"/><text x="${xs(2.95)+8}" y="${y-16}" font-family="${MONO}" font-size="12" fill="${ink}">easing</text>`;
+ for(let s=0;s<=10;s++)o+=`<line x1="${xs(s)}" y1="${y+4}" x2="${xs(s)}" y2="${y+(s%5?9:13)}" stroke="${dim}" stroke-width="1.5"/>`;
+ KEYS.forEach(k=>{const p=t>=k;o+=`<rect x="${xs(k)-5}" y="${y-5}" width="10" height="10" transform="rotate(45 ${xs(k)} ${y})" fill="${p?(light?'#1B1B1F':'#FFD23F'):'none'}" stroke="${light?'#1B1B1F':'#FFD23F'}" stroke-width="1.5"/>`});
+ const px=xs(t);o+=`<line x1="${px}" y1="${y-38}" x2="${px}" y2="${y+16}" stroke="${RED}" stroke-width="2"/><polygon points="${px-7},${y-44} ${px+7},${y-44} ${px},${y-34}" fill="${RED}"/>`;
+ return o}
+
+// ---------- graph geometry ----------
+const G={x:110,y:96,w:420,h:300},VMAX=1.25;
+const gx=u=>G.x+u*G.w,gy=v=>G.y+G.h-v/VMAX*G.h;
+const TR={x0:200,x1:900,y:520,s:64};
+const trX=v=>TR.x0+(TR.x1-TR.x0)*v;
+function curveFn(t){ // returns function u->v for current visual curve
+ if(t<5.4)return u=>u;
+ if(t<7.3){const k=eio(P(t,5.4,5.95));const p1=[lerp(1/3,.42,k),lerp(1/3,0,k)],p2=[lerp(2/3,.58,k),lerp(2/3,1,k)];return bez(p1[0],p1[1],p2[0],p2[1])}
+ const k=eio(P(t,7.3,7.75));return u=>lerp(easeIO(u),spring(u),k)}
+function handles(t){const k=eio(P(t,5.4,5.95));return[[lerp(1/3,.42,k),lerp(1/3,0,k)],[lerp(2/3,.58,k),lerp(2/3,1,k)]]}
+const RUNS=[{a:4,b:5,f:u=>u,col:RED},{a:6,b:7,f:easeIO,col:BLUE},{a:7.9,b:9,f:spring,col:PUR}];
+function runAt(t){for(let i=RUNS.length-1;i>=0;i--)if(t>=RUNS[i].a-0.05)return i;return -1}
+function sqPos(t){const i=runAt(t);if(i<0)return 0;const r=RUNS[i];const u=P(t,r.a,r.b);
+ if(i>0&&t<r.a)return 0; return r.f(u)}
+// square position with reset: between runs square snaps back (fade)
+function squareState(t){const i=runAt(t);if(i<0)return{v:0,op:1};const r=RUNS[i];
+ const next=RUNS[i+1];let op=1;let v=r.f(P(t,r.a,r.b));
+ if(next&&t>next.a-0.45){const k=P(t,next.a-0.45,next.a-0.05);op=1-k;if(k>=1){v=0;op=1}}
+ return{v,op,i}}
+function check(x,y,t,t0,col){const k=P(t,t0,t0+0.3);if(k<=0)return'';const len=60;
+ return `<circle cx="${x}" cy="${y}" r="${22*eo(k*1.5)}" fill="${col}"/><path d="M${x-10} ${y} L${x-3} ${y+8} L${x+11} ${y-8}" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="${len}" stroke-dashoffset="${len*(1-eo(P(t,t0+.08,t0+.3)))}"/>`}
+
+function lightScene(t){let o=`<rect width="1280" height="720" fill="#EBEBEB"/>`;
+ // dotted grid bg
+ o+=`<g opacity=".5">`;for(let x=40;x<1280;x+=40)for(let y=40;y<640;y+=40)o+=`<circle cx="${x}" cy="${y}" r="1.2" fill="#B9B9B9"/>`;o+='</g>';
+ const ax=eo(P(t,2.95,3.3));
+ // axes
+ o+=`<rect x="${G.x}" y="${G.y}" width="${G.w}" height="${G.h}" fill="#F6F6F6" opacity="${ax}"/>`;
+ o+=`<line x1="${G.x}" y1="${G.y+G.h}" x2="${G.x+G.w*ax}" y2="${G.y+G.h}" stroke="#1B1B1F" stroke-width="2.5"/><line x1="${G.x}" y1="${G.y+G.h}" x2="${G.x}" y2="${G.y+G.h-(G.h)*ax}" stroke="#1B1B1F" stroke-width="2.5"/>`;
+ o+=`<line x1="${G.x}" y1="${gy(1)}" x2="${G.x+G.w}" y2="${gy(1)}" stroke="#999" stroke-width="1" stroke-dasharray="4 5" opacity="${ax}"/><line x1="${gx(1)}" y1="${G.y}" x2="${gx(1)}" y2="${G.y+G.h}" stroke="#999" stroke-width="1" stroke-dasharray="4 5" opacity="${ax}"/>`;
+ o+=`<g opacity="${ax}" font-family="${MONO}" font-size="13" fill="#555"><text x="${G.x+G.w}" y="${G.y+G.h+22}" text-anchor="end">time →</text><text transform="translate(${G.x-14} ${G.y+6}) rotate(-90)" text-anchor="end">position →</text><text x="${G.x-8}" y="${gy(1)+4}" text-anchor="end">1</text><text x="${G.x-8}" y="${G.y+G.h+4}" text-anchor="end">0</text></g>`;
+ // curve
+ if(t>=3.4){const f=curveFn(t);let d='';const N=90;for(let i=0;i<=N;i++){const u=i/N;d+=(i?'L':'M')+gx(u).toFixed(1)+' '+gy(f(u)).toFixed(1)}
+  const col=t<5.4?RED:t<7.3?BLUE:(t<7.75?BLUE:PUR);
+  const dl=P(t,3.4,3.85);
+  o+=`<path d="${d}" fill="none" stroke="#1B1B1F" stroke-width="4" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="${1-dl}"/>`;
+  // control handles
+  if(t>=5.4&&t<7.5){const hk=t<7.3?1:1-P(t,7.3,7.5);const [p1,p2]=handles(t);
+   o+=`<g opacity="${eo(P(t,5.4,5.55))*hk}"><line x1="${gx(0)}" y1="${gy(0)}" x2="${gx(p1[0])}" y2="${gy(p1[1])}" stroke="${BLUE}" stroke-width="2"/><line x1="${gx(1)}" y1="${gy(1)}" x2="${gx(p2[0])}" y2="${gy(p2[1])}" stroke="${BLUE}" stroke-width="2"/><circle cx="${gx(p1[0])}" cy="${gy(p1[1])}" r="8" fill="#fff" stroke="${BLUE}" stroke-width="3"/><circle cx="${gx(p2[0])}" cy="${gy(p2[1])}" r="8" fill="#fff" stroke="${BLUE}" stroke-width="3"/>`;
+   o+=`<text x="${G.x+G.w-10}" y="${G.y+G.h-14}" text-anchor="end" font-family="${MONO}" font-size="14" fill="${BLUE}">cubic-bezier(${p1[0].toFixed(2)}, ${p1[1].toFixed(2)}, ${p2[0].toFixed(2)}, ${p2[1].toFixed(2)})</text></g>`}
+  if(t>=7.3){o+=`<text x="${G.x+G.w-10}" y="${G.y+G.h-14}" text-anchor="end" font-family="${MONO}" font-size="14" fill="${PUR}" opacity="${P(t,7.45,7.75)}">y = 1 − e^(−5u)·cos(9u)</text>`;
+   o+=`<g opacity="${P(t,7.6,7.9)}"><line x1="${gx(0.24)}" y1="${gy(1.17)}" x2="${gx(0.24)+60}" y2="${gy(1.17)}" stroke="${PUR}" stroke-dasharray="3 3"/><text x="${gx(0.24)+66}" y="${gy(1.17)+5}" font-family="${MONO}" font-size="12" fill="${PUR}">+17%</text></g>`}
+  // follow dot
+  const st=squareState(t);if(st.i!==undefined&&st.i>=0){const r=RUNS[st.i];const u=P(t,r.a,r.b);if(t>=r.a-0.05)o+=`<circle cx="${gx(u)}" cy="${gy(curveFn(t)(u))}" r="8" fill="${r.col}" stroke="#fff" stroke-width="2.5" opacity="${st.op}"/>`}
+ }
+ // notes
+ o+=hand(590,200,'linear = robotic',RED,t,3.45,40,0.7,-5);
+ if(t>=3.6){const k=eo(P(t,3.6,4.0));o+=`<path d="M584 214 C 540 240, 470 250, 420 ${gy(0.72)}" fill="none" stroke="${RED}" stroke-width="3" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="${1-k}"/>${k>.95?`<path d="M432 ${gy(0.72)-12} L420 ${gy(0.72)} L436 ${gy(0.72)+6}" fill="none" stroke="${RED}" stroke-width="3" stroke-linecap="round"/>`:''}`}
+ if(t>=5.15){const k=eo(P(t,5.15,5.4));o+=`<path d="M582 ${198} Q 720 ${183} ${582+290*k} ${172}" fill="none" stroke="${RED}" stroke-width="4" stroke-linecap="round"/>`}
+ o+=hand(600,262,'ease in-out',BLUE,t,5.45,40,0.6,-3);
+ o+=check(860,250,t,7.05,BLUE);
+ o+=hand(610,334,'spring = alive',PUR,t,7.35,42,0.6,-4);
+ o+=check(900,320,t,9.05,PUR);
+ // track
+ const tk=eo(P(t,2.95,3.35));
+ o+=`<line x1="${TR.x0-40}" y1="${TR.y+TR.s/2+6}" x2="${lerp(TR.x0-40,TR.x1+260,tk)}" y2="${TR.y+TR.s/2+6}" stroke="#1B1B1F" stroke-width="3"/>`;
+ [[0,'start'],[1,'end']].forEach(([v,l])=>o+=`<g opacity="${tk}"><line x1="${trX(v)+TR.s/2}" y1="${TR.y-14}" x2="${trX(v)+TR.s/2}" y2="${TR.y+TR.s+16}" stroke="#888" stroke-dasharray="4 4"/><text x="${trX(v)+TR.s/2}" y="${TR.y+TR.s+36}" text-anchor="middle" font-family="${MONO}" font-size="13" fill="#666">${l}</text></g>`);
+ // ghosts
+ const st=squareState(t);
+ RUNS.forEach((r,i)=>{if(t<r.a)return;let fade=1;const nx=RUNS[i+1];if(nx&&t>nx.a-0.45)fade=1-P(t,nx.a-0.45,nx.a-0.1);if(fade<=0)return;
+  for(let k=0;k<=10;k++){const tt=r.a+k*0.1;if(tt>t+1e-6)break;const v=r.f(k/10);o+=`<rect x="${trX(v)}" y="${TR.y}" width="${TR.s}" height="${TR.s}" rx="12" fill="none" stroke="${r.col}" stroke-width="2.5" opacity="${0.75*fade}"/>`}});
+ // square with motion blur from ±half-frame displacement
+ if(tk>0){const dt=1/60;const v0=squareState(t-dt).v,v1=squareState(t+dt).v;const N=8;const disp=Math.abs(v1-v0)*(TR.x1-TR.x0);
+  if(disp>2){for(let k=0;k<N;k++){const v=lerp(v0,v1,k/(N-1));o+=`<rect x="${trX(v)}" y="${TR.y}" width="${TR.s}" height="${TR.s}" rx="12" fill="#1B1B1F" opacity="${(0.32*st.op).toFixed(3)}"/>`}}
+  else o+=`<rect x="${trX(st.v)}" y="${TR.y}" width="${TR.s}" height="${TR.s}" rx="12" fill="#1B1B1F" opacity="${st.op*tk}"/>`;
+  if(st.op<1)o+=`<rect x="${trX(0)}" y="${TR.y}" width="${TR.s}" height="${TR.s}" rx="12" fill="#1B1B1F" opacity="${1-st.op}"/>`}
+ // cursor dragging handles
+ if(t>=5.15&&t<6.1){const [p1,p2]=handles(t);let cx,cy;
+  if(t<5.4){const k=eio(P(t,5.15,5.4));cx=lerp(760,gx(1/3),k);cy=lerp(460,gy(1/3),k)}
+  else if(t<5.62){cx=gx(p1[0]);cy=gy(p1[1])}
+  else if(t<5.72){const k=eio(P(t,5.62,5.72));cx=lerp(gx(.42),gx(p2[0]),k);cy=lerp(gy(0),gy(p2[1]),k)}
+  else{cx=gx(p2[0]);cy=gy(p2[1])}
+  const fade=1-P(t,5.95,6.1);o+=`<g transform="translate(${cx} ${cy})" opacity="${fade}"><path d="M0 0 L0 24 L6 18 L11 29 L15 27 L10 16 L18 16 Z" fill="#1B1B1F" stroke="#fff" stroke-width="1.6"/></g>`}
+ // header
+ o+=`<text x="110" y="52" font-family="${IMP}" font-size="30" fill="#1B1B1F" letter-spacing="1" opacity="${ax}">EASING, EXPLAINED</text><text x="350" y="52" font-family="${MONO}" font-size="13" fill="#777" opacity="${ax}">same distance · same duration · different feel</text>`;
+ return o}
+
+function darkScene(t){let o=`<rect width="1280" height="720" fill="#1B1B1F"/>`;
+ // subtle grid
+ o+=`<g stroke="#26262c" stroke-width="1">`;for(let x=0;x<=1280;x+=80)o+=`<line x1="${x}" y1="0" x2="${x}" y2="720"/>`;for(let y=0;y<=720;y+=80)o+=`<line x1="0" y1="${y}" x2="1280" y2="${y}"/>`;o+='</g>';
+ const blur=$('mbB');
+ if(t<1){ // STRETCH
+  let x,sx,b=0;const u=t;
+  if(u<0.35){const k=P(u,0,0.35);x=lerp(-1500,640,eo(k));sx=2.4;b=(1-k)*60+6}
+  else{const k=P(u,0.35,0.95);sx=1+1.4*Math.exp(-6*k)*Math.cos(14*k);x=640;b=Math.abs(1.4*Math.exp(-6*k)*Math.sin(14*k))*4}
+  const fade=1-P(t,0.9,1.0);
+  blur.setAttribute('stdDeviation',`${b.toFixed(1)} 0`);
+  o+=`<g opacity="${fade}" filter="url(#mb)"><text x="0" y="0" transform="translate(${x} 450) scale(${sx} 1)" text-anchor="middle" font-family="${IMP}" font-size="250" fill="${BLUE}" letter-spacing="2">STRETCH</text></g>`;
+  o+=`<g opacity="${fade}">${hand(860,560,'elastic',BLUE,t,0.4,46,0.4,-6)}${t>0.55?`<path d="M850 545 q -40 -10 -60 -40" fill="none" stroke="${BLUE}" stroke-width="3" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="${1-eo(P(t,0.55,0.8))}"/>`:''}</g>`;
+ } else blur.setAttribute('stdDeviation','0 0');
+ // SPIN handled by HTML 3D
+ if(t>=1&&t<2){o+=`<g opacity="${1-P(t,1.92,2)}">`+hand(840,580,'rotateY 450°','#EDEDED',t,1.55,40,0.4,-5)+`</g>`;
+  o+=`<ellipse cx="640" cy="560" rx="${260}" ry="22" fill="none" stroke="#444" stroke-width="2" stroke-dasharray="6 8"/>`}
+ return o}
+
+const SNAPS=[{t:2.0,x:420,y:300,fs:250},{t:2.3,x:860,y:520,fs:170},{t:2.6,x:560,y:440,fs:310}];
+function frame(t){
+ const svg=$('dyn'),ov=$('ov'),spin=$('spin');
+ const light=t>=2.95;
+ // loop wipe at end
+ let o=light?lightScene(t):darkScene(t);
+ svg.innerHTML=o;
+ // SPIN
+ if(t>=1&&t<2){spin.style.display='block';const k=P(t,1,1.85);const e=1-Math.pow(1-k,4);const ang=450*e;const vel=4*Math.pow(1-k,3)*450/0.85;
+  spin.style.top='225px';spin.style.transform=`rotateY(${ang}deg)`;spin.style.filter=`blur(${Math.min(8,vel/500).toFixed(2)}px)`;spin.style.opacity=1-P(t,1.92,2)}
+ else spin.style.display='none';
+ let ovo='';
+ // SNAP — no easing, hard jumps
+ if(t>=2&&t<2.95){let s=SNAPS[0];for(const q of SNAPS)if(t>=q.t)s=q;
+  ovo+=`<text id="snapT" x="${s.x}" y="${s.y}" text-anchor="middle" font-family="${IMP}" font-size="${s.fs}" fill="${RED}" letter-spacing="2">SNAP</text>`;}
+ ovo+=tc(t,light)+timeline(t,light);
+ // end wipe to dark for seamless loop
+ if(t>9.55){const k=eio(P(t,9.55,10));ovo+=`<rect x="0" y="0" width="${1280*k}" height="720" fill="#1B1B1F"/>`}
+ ov.innerHTML=ovo;
+ const st=document.getElementById('snapT');
+ if(st){const b=st.getBBox();const pad=10;const x0=b.x-pad,y0=b.y+b.height*0.04-pad,x1=b.x+b.width+pad,y1=b.y+b.height*0.9+pad;let g='';
+  g+=`<g stroke="${RED}" stroke-width="1" opacity=".75"><line x1="0" y1="${y0}" x2="1280" y2="${y0}"/><line x1="0" y1="${y1}" x2="1280" y2="${y1}"/><line x1="${x0}" y1="0" x2="${x0}" y2="720"/><line x1="${x1}" y1="0" x2="${x1}" y2="720"/></g>`;
+  g+=`<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="none" stroke="${RED}" stroke-width="2"/>`;
+  const mx=(x0+x1)/2,my=(y0+y1)/2;[[x0,y0],[mx,y0],[x1,y0],[x1,my],[x1,y1],[mx,y1],[x0,y1],[x0,my]].forEach(([a,b2])=>g+=`<rect x="${a-6}" y="${b2-6}" width="12" height="12" fill="#1B1B1F" stroke="${RED}" stroke-width="2"/>`);
+  g+=`<text x="${x0}" y="${y0-12}" font-family="${MONO}" font-size="13" fill="${RED}">W ${Math.round(x1-x0)}  H ${Math.round(y1-y0)}  ease: none</text>`;
+  const hx=Math.min(x1+20,1020);g+=hand(hx,Math.min(y1+46,630),'no ease. on purpose.',RED,t,2.15,36,0.35,-4);
+  ov.insertAdjacentHTML('afterbegin',g)}
+}
+const q=new URLSearchParams(location.search);const FT=q.has('t')?parseFloat(q.get('t')):null;let t0=null;
+function loop(now){if(t0===null)t0=now;const t=FT!==null?FT:((now-t0)/1000)%DUR;frame(t);if(FT===null)requestAnimationFrame(loop)}
+(document.fonts?document.fonts.ready:Promise.resolve()).then(()=>requestAnimationFrame(loop));
+</script><!-- backlink -->
+<a id="m15back" href="../" style="position:fixed;left:14px;top:12px;z-index:99999;padding:6px 12px;border-radius:999px;background:rgba(10,10,14,.55);color:#fff;font:500 13px/1.2 -apple-system,'PingFang SC','Noto Sans CJK SC',sans-serif;text-decoration:none;backdrop-filter:blur(6px);opacity:0;transition:opacity .35s;pointer-events:none">← 返回总览</a>
+<script>(function(){if(new URLSearchParams(location.search).has('t'))return;var a=document.getElementById('m15back'),h;function s(){a.style.opacity=1;a.style.pointerEvents='auto';clearTimeout(h);h=setTimeout(function(){a.style.opacity=0;a.style.pointerEvents='none'},2200)}addEventListener('mousemove',s);addEventListener('touchstart',s)})();</script>
+</body></html>

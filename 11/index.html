@@ -1,0 +1,103 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>11 · 点阵地图数据片</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}#stage{width:1280px;height:720px;position:relative;overflow:hidden;transform-origin:center center;flex:none}</style>
+<script>
+const QT=new URLSearchParams(location.search).get('t');
+function fitStage(){const s=Math.min(innerWidth/1280,innerHeight/720);document.getElementById('stage').style.transform='scale('+s+')';}
+addEventListener('resize',()=>fitStage());
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function startLoop(draw,fl=[]){fitStage();const P=document.fonts?Promise.all(fl.map(f=>document.fonts.load(f).catch(()=>0))).then(()=>document.fonts.ready):Promise.resolve();let done=false;const go=()=>{if(!done){done=true;_go(draw)}};P.then(go,go);setTimeout(go,2500);}
+function _go(draw){const t0=performance.now();function f(now){const t=QT!==null?parseFloat(QT):((now-t0)/1000)%10;draw(t);if(QT===null)requestAnimationFrame(f);}if(QT!==null)f(0);else requestAnimationFrame(f);}
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),lerp=(a,b,t)=>a+(b-a)*t,ss=(a,b,x)=>{x=clamp((x-a)/(b-a));return x*x*(3-2*x)},eo=x=>1-Math.pow(1-clamp(x),3),eio=x=>{x=clamp(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2};
+function spring(x,z=0.7,w=14){if(x<=0)return 0;const wd=w*Math.sqrt(1-z*z);return 1-Math.exp(-z*w*x)*(Math.cos(wd*x)+z*w/wd*Math.sin(wd*x));}
+</script>
+
+<style>#stage{background:#EDEDEB;font-family:Inter,"SF Pro Display","Helvetica Neue",Arial,sans-serif}text{font-family:Inter,"SF Pro Display","Helvetica Neue",Arial,sans-serif}</style></head><body><div id="wrap"><div id="stage">
+<svg id="s" width="1280" height="720" viewBox="0 0 1280 720">
+<defs><filter id="sh" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#1C1C1E" flood-opacity=".13"/><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#1C1C1E" flood-opacity=".08"/></filter>
+<clipPath id="shapeclip"><rect id="clipr"/></clipPath>
+<radialGradient id="gshade" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#C9C9C4" stop-opacity=".35"/></radialGradient></defs>
+<g id="cam"><rect id="shape" filter="url(#sh)"/><g id="content" clip-path="url(#shapeclip)"></g><g id="outer"></g><g id="cursor"></g></g>
+</svg></div></div>
+<script>
+const MASK='AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOA/gP8HAAAAAAAAAAAAAAAAAAAAAADs//7//wcAAAAGAAAHAAAAAAAAAABArv/4//8PAPgBAAAAgAMAAAAAAAAAwADEw////wEABgAAAAAgAAAAAAAAAABgcD8A/v8PAAAAAAwA/j8AOAEAAAAAeJHtD8D/fwAAAAAwsPz//wMAABDAAwD4w/4H8P8FAAAcAIb7/////x+AgP///064+QD/HwAA/B8A9v///////7/w/////x9++B8AAOD/1//7////////jP////+/+QE/wAeA39f//////////w/w/////xEs4AEAAH7+////////////gP////8HeAAMAADg5///////////+ADgAf7/f4AvAAAAAH78////////H0AAAAyA//8f8AcAAIBB8////////38ADwAQAOD//9//AQAAHAT/////////A3AAAAAA/v//+T8AAODz//////////8DAQAAAMD/////AgAAsP//////////LwAAAAAA+P///2MAAAD+//////////8AAAAAAAD///+/AAAA4P//f/7/////JwAAAAAA8P///wcAAAD+/vnx/////z8AAAAAAAD///8HAAAA/pwPPP//////MQAAAAAA8P//PwAAAOBH8t/n/////wcBAAAAAAD///8BAAAAPkD5P/7///81EAAAAAAA4P//DwAAAKD5Av/n////f8YAAAAAAAD8//8AAAAA+AdA//////8jDwAAAAAAgP//AwAAAOD/Afj/////PxgAAAAAAADw/x8AAAAA/n////////8HAAAAAAAAAPwDAgAAAPD////7////fwAAAAAAAACgHyAAAACA//9/f/////8DAAAAAAAAAPQBAAAAAPz///8v+P//XwAAAAAAAAAAHjAAAADA/////g/+//8EAAAAAAAAAOBhCAAAAP7//89/4D9/AAAAAAAAAAAAPAMMAADA/////Qf84BcAAAAAAAAAAAA/AAAAAPz//78fgAf+QAAAAAAAAAAAAA8AAADg////ewA4gA8EAAAAAAAAAADAAAAAAP7//38BgAP4QQAAAAAAAAAAAAiPAADA////7wAwgAwYAAAAAAAAAAAA9w8AAPj///8HAAVIAAEAAAAAAAAAAID/AQAA////fwBAAAERAAAAAAAAAAAA+P8AAGDh//8DAAA0GAAAAAAAAAAAAID/HwAAAPj/HwAAgMIBAAAAAAAAAAAA/P8BAACA//8AAAAY3wAAAAAAAAAAAOD/fwAAAPz/BwAAAOOFAQAAAAAAAAAA/P8/AACA/z8AAABgbtYBAAAAAAAAAOD//w8AAPD/AwAAAAQIfAIAAAAAAAAA/P//AQAA/z8AAACAA4APAQAAAAAAAID//w8AAPD/AwAAAAARkEEAAAAAAAAA+P9/AAAA/j8AAAAAAAAAAAAAAAAAAAD//wcAAPD/QwAAAACAIwAAAAAAAAAA8P9/AAAA/z8GAAAAAD8GIAAAAAAAAAD8/wMAAPD/cQAAAAD4fwAAAAAAAAAAgP8/AAAA/w8HAAAAgP8HAAAAAAAAAAD4/wMAAOB/MAAAAAD//wEBAAAAAAAAgP8PAAAA/g8DAAAA+P8fAAAAAAAAAAD4PwAAAOB/MAAAAID//wMAAAAAAAAAgP8DAAAA/gMAAAAA+P9/AAAAAAAAAAD8HwAAAMA/AAAAAID//wcAAAAAAAAAwP8BAAAA+AEAAAAA8P9/AAAAAAAAAAD8DwAAAIAPAAAAAAAP/gMAAAAAAAAAwB8AAAAAAAAAAAAAEMAfAAEAAAAAAAD+AQAAAAAAAAAAAAAA8AEgAAAAAAAA4AcAAAAAAAAAAAAAAAAAAAYAAAAAAAB+AAAAAAAAAAAAAAAAwAAwAAAAAAAA4AMAAAAAAAAAAAAAAAAIgAAAAAAAAAAeAAAAAAAAAAAAAAAAAAAGAAAAAAAA4AEAAAAAAAAAAAAAAAAAAAAAAAAAAAAPAAAAAAAAAAABAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+const OR='#F25C2A',DK='#1C1C1E',BG='#EDEDEB';
+const CX=640,CY=340;
+// land dots
+const bin=atob(MASK);const LAND=[];for(let k=0;k<180*90;k++){if(bin.charCodeAt(k>>3)&(1<<(k&7))){const i=k%180,j=Math.floor(k/180);LAND.push([(-179+i*2)*Math.PI/180,(89-j*2)*Math.PI/180]);}}
+const HZ=[120.2*Math.PI/180,30.3*Math.PI/180];
+function angd(a,b){return Math.acos(clamp(Math.sin(a[1])*Math.sin(b[1])+Math.cos(a[1])*Math.cos(b[1])*Math.cos(a[0]-b[0]),-1,1));}
+const rr=mulberry(1111);const RUN=[];LAND.forEach(p=>{const d=angd(p,HZ);if(rr()<Math.max(.06,.5-d*.75))RUN.push([p,d,rr()]);});
+// states: [t, w,h,rx,fill,cam]
+const ST=[[0,120,120,60,OR,1.25],[0.5,360,78,39,OR,1.25],[1.5,440,80,20,'#FFFFFF',1.2],[2.5,400,260,30,'#FFFFFF',1.15],[3.4,72,72,36,'#FFFFFF',1.3],[4.0,30,30,15,OR,1.3],[4.5,430,430,215,'#FFFFFF',1.0],[7.0,460,350,28,'#FFFFFF',1.08],[8.2,380,80,40,OR,1.2],[8.75,440,70,35,DK,1.2],[9.55,120,120,60,OR,1.25]];
+const hex=c=>[1,3,5].map(i=>parseInt(c.slice(i,i+2),16));
+function val(t,idx){let v=ST[0][idx];for(let i=1;i<ST.length;i++)v+=(ST[i][idx]-ST[i-1][idx])*spring(t-ST[i][0],.7,15);return v;}
+function col(t){let c=hex(ST[0][4]);for(let i=1;i<ST.length;i++){const a=hex(ST[i-1][4]),b=hex(ST[i][4]),k=clamp(spring(t-ST[i][0],.7,15));c=c.map((v,j)=>v+(b[j]-a[j])*k);}return `rgb(${c.map(v=>Math.round(clamp(v,0,255))).join(',')})`;}
+function stateIdx(t){let i=0;for(let k=0;k<ST.length;k++)if(t>=ST[k][0])i=k;return i;}
+function cAlpha(t,i){if(i===0)return 1-ss(ST[1][0]-.12,ST[1][0]-.02,t);const t0=ST[i][0],t1=i+1<ST.length?ST[i+1][0]:10.5;return ss(t0+.1,t0+.26,t)*(1-ss(t1-.12,t1-.02,t));}
+const CLICKS=[1.0,2.3,3.15,7.5,8.0,8.6];
+function press(t){return CLICKS.reduce((a,c)=>{const k=t-c;return a+(k>-0.06&&k<.3?(k<.06?-.035*eo((k+.06)/.12):-.035*(1-spring(k-.06,.6,22))):0)},0);}
+// cursor keys [t,x,y]
+const CK=[[0,860,560],[0.55,820,500],[0.92,CX+90,CY+12],[1.06,CX+90,CY+12],[1.6,CX+120,CY+70],[2.15,CX+192,CY+12],[2.36,CX+192,CY+12],[2.75,CX+120,CY+150],[3.05,CX+40,CY+96],[3.25,CX+40,CY+96],[3.7,CX+180,CY+170],[5.6,CX+150,CY+40],[6.0,CX+90,CY+20],[6.8,CX-110,CY+30],[7.2,CX-20,CY+200],[7.4,CX-26,CY-90],[7.6,CX-26,CY-90],[7.9,CX-100,CY-10],[8.08,CX-100,CY-10],[8.45,CX+30,CY+16],[8.66,CX+30,CY+16],[9.2,CX+170,CY+140],[10,860,560]];
+function cur(t){let i=0;while(i<CK.length-2&&CK[i+1][0]<=t)i++;const a=CK[i],b=CK[i+1];const k=eio((t-a[0])/(b[0]-a[0]));return [lerp(a[1],b[1],k),lerp(a[2],b[2],k)];}
+const T=(x,y,s,sz,w=600,c=DK,anc='middle',ls=0,op=1)=>`<text x="${x}" y="${y}" font-size="${sz}" font-weight="${w}" fill="${c}" text-anchor="${anc}" letter-spacing="${ls}" opacity="${op}">${s}</text>`;
+const runner=(x,y,s,c='#fff')=>`<g transform="translate(${x},${y}) scale(${s})" fill="none" stroke="${c}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="-24" r="6" fill="${c}" stroke="none"/><path d="M2 -14 L-4 6 L8 16 L6 30 M-4 6 L-16 28 M0 -12 L-14 -4 L-20 6 M2 -12 L14 -2 L24 -6"/></g>`;
+function globe(t,R){const drag=t<6?0:(t<6.8?eio((t-6)/.8):1);const lon0=HZ[0]+drag*.8+.02*Math.sin(t*.5)+(t-4.5)*.04,lat0=.42;
+ const sl=Math.sin(lat0),cl=Math.cos(lat0);const tiers=['','',''];const sr=R/215;
+ const runP=[];const rip=(t-4.85)*1.5;
+ function proj(p){const dl=p[0]-lon0;const x=Math.cos(p[1])*Math.sin(dl),y=cl*Math.sin(p[1])-sl*Math.cos(p[1])*Math.cos(dl),z=sl*Math.sin(p[1])+cl*Math.cos(p[1])*Math.cos(dl);return [CX+x*R*.94,CY-y*R*.94,z];}
+ for(const p of LAND){const [x,y,z]=proj(p);if(z<=0.02)continue;const r=(1.3+z*1.25)*sr;const k=z>.66?0:(z>.33?1:2);tiers[k]+=`M${(x-r).toFixed(1)} ${y.toFixed(1)}a${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(2*r).toFixed(2)} 0a${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(-2*r).toFixed(2)} 0`;}
+ let o=`<circle cx="${CX}" cy="${CY}" r="${R}" fill="url(#gshade)"/>`;
+ o+=`<path d="${tiers[2]}" fill="#D6D6D1"/><path d="${tiers[1]}" fill="#B4B4AE"/><path d="${tiers[0]}" fill="#8E8E88"/>`;
+ // runners
+ let rp='';let cnt=0;for(const [p,d,rnd] of RUN){if(d>rip)continue;cnt++;const [x,y,z]=proj(p);if(z<=.02)continue;const age=clamp((rip-d)/.25);const r=(1.6+z*1.4)*sr*(age<1?1+.8*(1-age):1);rp+=`M${(x-r).toFixed(1)} ${y.toFixed(1)}a${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(2*r).toFixed(2)} 0a${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(-2*r).toFixed(2)} 0`;}
+ o+=`<path d="${rp}" fill="${OR}"/>`;
+ // ripple rings (small circles on sphere around HZ)
+ for(let w=0;w<3;w++){const rad=rip-w*.35;if(rad<=0||rad>2.6)continue;let d='';let pen=false;for(let k=0;k<=96;k++){const b=k/96*Math.PI*2;// point at angular distance rad, bearing b from HZ
+   const la=Math.asin(Math.sin(HZ[1])*Math.cos(rad)+Math.cos(HZ[1])*Math.sin(rad)*Math.cos(b));const lo=HZ[0]+Math.atan2(Math.sin(b)*Math.sin(rad)*Math.cos(HZ[1]),Math.cos(rad)-Math.sin(HZ[1])*Math.sin(la));const [x,y,z]=proj([lo,la]);if(z<0){pen=false;continue;}d+=(pen?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);pen=true;}
+  o+=`<path d="${d}" fill="none" stroke="${OR}" stroke-width="${2.2-w*.5}" opacity="${(1-rad/2.6)*.9}"/>`;}
+ const [hx,hy,hz]=proj(HZ);if(hz>0){const pr=((t*2)%1);o+=`<circle cx="${hx}" cy="${hy}" r="${6+pr*16}" fill="none" stroke="${OR}" stroke-width="2" opacity="${1-pr}"/><circle cx="${hx}" cy="${hy}" r="6" fill="${OR}" stroke="#fff" stroke-width="2.5"/>`;}
+ return [o,Math.min(RUN.length,cnt)];}
+function draw(t){
+ const w=val(t,1),h=val(t,2),rx=val(t,3),cam=val(t,5);const p=1+press(t);const W=w*p,H=h*p;
+ document.getElementById('cam').setAttribute('transform',`translate(${CX} ${CY}) scale(${cam}) translate(${-CX} ${-CY})`);
+ const sh=document.getElementById('shape');const set=(e,a)=>{for(const k in a)e.setAttribute(k,a[k]);};
+ const geo={x:CX-W/2,y:CY-H/2,width:Math.max(0,W),height:Math.max(0,H),rx:Math.max(0,Math.min(rx*p,W/2,H/2))};set(sh,{...geo,fill:col(t)});set(document.getElementById('clipr'),geo);
+ const si=stateIdx(t);const a=cAlpha(t,si);const blur=(1-a)*6;let o='',out='';
+ const x0=CX-W/2,y0=CY-H/2;
+ switch(si){
+  case 0: case 10: o=runner(CX-2,CY+2,1.25);break;
+  case 1: o=T(CX,CY+7,'Find runs near you →',21,600,'#fff');break;
+  case 2:{const s='@awei_runs';const n=Math.floor(clamp((t-1.62)/.5)*s.length);o=T(x0+28,CY+8,s.slice(0,n)||'',22,500,DK,'start');if(n===0)o+=T(x0+28,CY+8,'Your handle',22,500,'#B5B5B0','start');
+   const cw=(n?s.slice(0,n).length:0)*11.6;o+=`<rect x="${x0+29+cw}" y="${CY-12}" width="2" height="26" fill="${OR}" opacity="${Math.sin(t*12)>0?1:0}"/>`;
+   const on=n>=s.length;o+=`<circle cx="${x0+W-40}" cy="${CY}" r="24" fill="${on?OR:'#E4E4E0'}"/><path d="M${x0+W-50} ${CY} h18 m-7 -7 l7 7 l-7 7" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;break;}
+  case 3: o=T(CX,y0+46,'IS THIS YOU?',12,700,'#9A9A95','middle',2.5)+`<circle cx="${CX}" cy="${y0+96}" r="30" fill="#FFE3D8"/>`+runner(CX-1,y0+97,.75,OR)+T(CX,y0+156,'Awei',24,700)+T(CX,y0+182,'@awei_runs · Hangzhou',15,500,'#8A8A85')+`<rect x="${CX-90}" y="${y0+204}" width="180" height="40" rx="20" fill="${OR}"/>`+T(CX,y0+229,"Yes, it's me",15,600,'#fff');break;
+  case 4:{const r=18,ang=t*540;o=`<circle cx="${CX}" cy="${CY}" r="${r}" fill="none" stroke="#EFEFEC" stroke-width="5"/><circle cx="${CX}" cy="${CY}" r="${r}" fill="none" stroke="${OR}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${2*Math.PI*r*.3} 999" transform="rotate(${ang} ${CX} ${CY})"/>`;break;}
+  case 5:{for(let k=0;k<2;k++){const pr=((t-4.0)*2+k*.5)%1;out+=`<circle cx="${CX}" cy="${CY}" r="${15+pr*42}" fill="none" stroke="${OR}" stroke-width="2" opacity="${(1-pr)*a}"/>`;}out+=`<circle cx="${CX}" cy="${CY}" r="5" fill="#fff" opacity="${a}"/>`+T(CX,CY+80,"You're on the map",18,600,DK,'middle',0,a);break;}
+  case 6:{const [g,cnt]=globe(t,W/2);o=g;const n=Math.round(12480*eo((t-4.9)/1.1));const ca=cAlpha(t,6);const txt=n.toLocaleString('en-US')+' runners';
+   out=`<g opacity="${ca}" transform="translate(0 ${(1-ca)*10})"><rect x="${CX-100}" y="${CY+W/2+22}" width="200" height="44" rx="22" fill="${DK}"/><circle cx="${CX-74}" cy="${CY+W/2+44}" r="5" fill="${OR}"/><text x="${CX+10}" y="${CY+W/2+50}" font-size="16" font-weight="600" fill="#fff" text-anchor="middle" style="font-variant-numeric:tabular-nums">${txt}</text></g>`;
+   if(t>5.9&&t<6.9){out+=T(CX,CY-W/2-26,'Drag to explore',13,600,'#9A9A95','middle',1.5,ss(5.9,6.1,t)*(1-ss(6.6,6.85,t)));}break;}
+  case 7:{o=T(x0+32,y0+52,'Runs near you',24,700,DK,'start');o+=`<circle cx="${x0+W-44}" cy="${y0+44}" r="16" fill="#F4F4F1"/>`+runner(x0+W-44,y0+45,.4,OR);
+   const tabs=[['This week',x0+32,94],['Next week',x0+142,96]];const sel=t>=7.5?1:0;
+   tabs.forEach(([s,x,wd],i)=>o+=T(x,y0+96,s,15,600,i===sel?DK:'#A3A39E','start'));
+   // two spring ends
+   const kL=spring(t-7.5,.62,22),kR=spring(t-7.5,.62,12);const L0=tabs[0][1],R0=L0+tabs[0][2]-26,L1=tabs[1][1],R1=L1+tabs[1][2]-26;
+   const lx=lerp(L0,L1,Math.max(kL,kR)),rx2=lerp(R0,R1,Math.min(kL,kR));const lxx=lerp(L0,L1,kR*0+kL<kR?kL:kL),r2=lerp(R0,R1,kR);
+   o+=`<line x1="${x0+32}" x2="${x0+W-32}" y1="${y0+112}" y2="${y0+112}" stroke="#EFEFEC" stroke-width="2"/><rect x="${lerp(L0,L1,kR)}" y="${y0+109}" width="${Math.max(10,lerp(R0,R1,kL)-lerp(L0,L1,kR))}" height="4" rx="2" fill="${OR}"/>`;
+   const rowsA=[['Grand Canal 10K','Thu 6:30 PM · 41 going','10K'],['Baochu Hill Climb','Fri 6:00 AM · 12 going','5K'],['Xixi Wetland Trail','Sun 8:00 AM · 27 going','12K']];
+   const rowsB=[['West Lake Sunrise','Sat 7:00 AM · 38 going','8K'],['Qiantang Riverside','Sun 6:30 AM · 54 going','15K'],['Liangzhu Park Easy','Tue 7:00 PM · 19 going','6K']];
+   const sw=ss(7.55,7.75,t);[[rowsA,1-sw,-1],[rowsB,sw,1]].forEach(([rows,al,dir])=>{if(al<=0)return;rows.forEach((r,i)=>{const yy=y0+136+i*68;const hi=(dir>0&&i===0&&t>7.95)?1:0;
+    o+=`<g opacity="${al}" transform="translate(${(1-al)*30*dir} 0)">${hi?`<rect x="${x0+16}" y="${yy}" width="${W-32}" height="60" rx="14" fill="#FFF1EB"/>`:''}<rect x="${x0+32}" y="${yy+10}" width="40" height="40" rx="12" fill="${i===0&&dir>0?OR:'#F4F4F1'}"/>${T(x0+52,yy+35,r[2],12,700,i===0&&dir>0?'#fff':'#8A8A85')}${T(x0+88,yy+28,r[0],16,700,DK,'start')}${T(x0+88,yy+48,r[1],13,500,'#9A9A95','start')}<path d="M${x0+W-44} ${yy+24} l6 6 l-6 6" stroke="#BDBDB8" stroke-width="2.5" fill="none" stroke-linecap="round"/></g>`;});});break;}
+  case 8: o=T(CX,CY+7,'Join run · Sat 7:00 AM',21,600,'#fff');break;
+  case 9: o=`<circle cx="${CX-150}" cy="${CY}" r="13" fill="${OR}"/><path d="M${CX-156} ${CY} l4.5 4.5 l8 -9" stroke="#fff" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`+T(CX+14,CY+6,"You're in. See you Saturday!",18,600,'#fff');break;
+ }
+ const ce=document.getElementById('content');ce.innerHTML=`<g opacity="${a}" style="filter:blur(${blur.toFixed(2)}px)">${o}</g>`;document.getElementById('outer').innerHTML=out;
+ // cursor
+ const [cx,cy]=cur(t);const cl=CLICKS.reduce((s,c)=>s+Math.exp(-Math.pow((t-c)/.07,2)),0)+(t>6&&t<6.8?1:0);const ca=clamp((t-.35)/.2)*(1-ss(9.3,9.5,t));
+ document.getElementById('cursor').innerHTML=`<g transform="translate(${cx} ${cy}) scale(${(1-cl*.15)/cam})" opacity="${ca}"><circle r="${16*cl}" fill="${DK}" opacity="${.12*Math.min(1,cl)}"/><path d="M0 0 L0 19 L4.6 14.8 L8 22 L11.2 20.6 L8 13.6 L14.2 13.4 Z" fill="${DK}" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></g>`;
+}
+startLoop(draw,['600 20px Inter','700 20px Inter','500 20px Inter']);
+</script><!-- backlink -->
+<a id="m15back" href="../" style="position:fixed;left:14px;top:12px;z-index:99999;padding:6px 12px;border-radius:999px;background:rgba(10,10,14,.55);color:#fff;font:500 13px/1.2 -apple-system,'PingFang SC','Noto Sans CJK SC',sans-serif;text-decoration:none;backdrop-filter:blur(6px);opacity:0;transition:opacity .35s;pointer-events:none">← 返回总览</a>
+<script>(function(){if(new URLSearchParams(location.search).has('t'))return;var a=document.getElementById('m15back'),h;function s(){a.style.opacity=1;a.style.pointerEvents='auto';clearTimeout(h);h=setTimeout(function(){a.style.opacity=0;a.style.pointerEvents='none'},2200)}addEventListener('mousemove',s);addEventListener('touchstart',s)})();</script>
+</body></html>

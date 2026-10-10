@@ -1,0 +1,137 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><title>03 · 沙漏旅行</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;900&display=swap" rel="stylesheet">
+<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;margin:-360px 0 0 -640px;overflow:hidden;background:#1a120b}canvas{display:block}</style></head><body><div id="stage"><canvas id="cv" width="1280" height="720"></canvas></div>
+<script>
+const W=640,H=360,FW=1280,FH=720,SERIF='"Songti SC","STSong","SimSun","Noto Serif SC","Noto Serif CJK SC",serif';
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),P=(t,a,d)=>cl((t-a)/d),L=(a,b,p)=>a+(b-a)*p;
+const eIO=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2,eOut=x=>1-Math.pow(1-x,3),ss=(a,b,x)=>{const t=cl((x-a)/(b-a));return t*t*(3-2*t)};
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const MAXH=1.6;const g=v=>{const c=Math.round(cl(v/MAXH)*255);return `rgb(${c},${c},${c})`};
+function mkMap(draw,blur=1.6){const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');x.fillStyle='#000';x.fillRect(0,0,W,H);draw(x);
+  const c2=document.createElement('canvas');c2.width=W;c2.height=H;const x2=c2.getContext('2d');x2.filter=`blur(${blur}px)`;x2.drawImage(c,0,0);
+  const d=x2.getImageData(0,0,W,H).data,a=new Float32Array(W*H);for(let i=0;i<W*H;i++)a[i]=d[i*4]/255*MAXH;return a}
+function caption(x,txt){x.fillStyle=g(.95);x.font=`600 17px ${SERIF}`;x.textBaseline='top';x.fillText(txt,22,18);x.fillRect(22,42,58,2)}
+function poly(x,pts){x.beginPath();x.moveTo(pts[0][0],pts[0][1]);for(const p of pts.slice(1))x.lineTo(p[0],p[1]);x.closePath();x.fill()}
+function ridge(x,y0,amp,f,ph,v,yBottom=H){x.fillStyle=g(v);x.beginPath();x.moveTo(0,yBottom);for(let X=0;X<=W;X+=4){x.lineTo(X,y0-amp*(Math.sin(X*f+ph)*.6+Math.sin(X*f*2.3+ph*1.7)*.3+Math.abs(Math.sin(X*f*.5+ph))*.5))}x.lineTo(W,yBottom);x.closePath();x.fill()}
+let S1,S3,S5,SE;
+function build(){
+  const r=rng(3);
+  S1=mkMap(x=>{x.fillStyle=g(.24);x.fillRect(0,0,W,H);
+    // sun: cleared disc with thick rim
+    x.fillStyle=g(.95);x.beginPath();x.arc(470,92,38,0,7);x.fill();x.fillStyle=g(0);x.beginPath();x.arc(470,92,32,0,7);x.fill();
+    ridge(x,225,34,.012,1,.6);ridge(x,262,18,.02,2.4,.9);
+    x.fillStyle=g(1.25);x.beginPath();x.moveTo(0,H);x.lineTo(0,300);x.bezierCurveTo(160,250,300,320,420,292);x.bezierCurveTo(520,270,600,300,640,288);x.lineTo(640,H);x.fill();
+    x.strokeStyle=g(.5);x.lineWidth=1.4;for(let k=0;k<6;k++){x.beginPath();x.moveTo(30+k*110,330+k%2*10);x.quadraticCurveTo(80+k*110,318,140+k*110,332);x.stroke()}
+    caption(x,'Day 1 · 沙漠')});
+  S3=mkMap(x=>{x.fillStyle=g(.2);x.fillRect(0,0,W,H);
+    x.fillStyle=g(.9);x.beginPath();x.arc(400,212,40,Math.PI,0);x.fill();x.fillStyle=g(0);x.beginPath();x.arc(400,212,34,Math.PI,0);x.fill();
+    x.fillStyle=g(.62);x.fillRect(0,212,W,90);
+    x.fillStyle=g(.95);x.fillRect(0,210,W,3);
+    x.fillStyle=g(.3);x.beginPath();x.moveTo(0,H);x.lineTo(0,292);x.bezierCurveTo(200,300,420,288,640,300);x.lineTo(640,H);x.fill();
+    for(let k=0;k<90;k++){x.fillStyle=g(.55+r()*.4);x.beginPath();x.arc(r()*W,305+r()*55,.8+r()*1.3,0,7);x.fill()}
+    // palm
+    x.strokeStyle=g(1.35);x.lineWidth=9;x.lineCap='round';x.beginPath();x.moveTo(108,330);x.quadraticCurveTo(92,230,140,150);x.stroke();
+    x.fillStyle=g(1.35);for(let k=0;k<7;k++){const a=-Math.PI*1.1+k*.47;x.save();x.translate(140,150);x.rotate(a);x.beginPath();x.moveTo(0,0);x.quadraticCurveTo(40,-24,88,10);x.quadraticCurveTo(40,-6,0,6);x.fill();x.restore()}
+    x.beginPath();x.arc(132,160,6,0,7);x.arc(146,162,6,0,7);x.fill();
+    caption(x,'Day 3 · 海边')});
+  S5=mkMap(x=>{x.fillStyle=g(.95);x.fillRect(0,0,W,H);
+    x.fillStyle=g(0);x.beginPath();x.arc(500,70,24,0,7);x.fill();x.fillStyle=g(.95);x.beginPath();x.arc(511,63,21,0,7);x.fill();
+    // back ridge + snow
+    const back=[[0,250],[70,190],[120,215],[200,130],[270,200],[330,165],[420,105],[500,190],[570,150],[640,210],[640,360],[0,360]];
+    x.fillStyle=g(1.32);poly(x,back);
+    x.fillStyle=g(.35);[[200,130],[420,105],[570,150],[70,190]].forEach(([px,py])=>{x.beginPath();x.moveTo(px,py);x.lineTo(px-26,py+30);x.lineTo(px-12,py+24);x.lineTo(px,py+34);x.lineTo(px+12,py+24);x.lineTo(px+26,py+30);x.closePath();x.fill()});
+    const front=[[0,300],[90,240],[160,280],[260,210],[340,270],[430,235],[520,285],[640,245],[640,360],[0,360]];
+    x.fillStyle=g(1.58);poly(x,front);
+    x.fillStyle=g(.25);[[90,240],[260,210],[430,235],[640,245]].forEach(([px,py])=>{x.beginPath();x.moveTo(px,py);x.lineTo(px-22,py+22);x.lineTo(px-8,py+18);x.lineTo(px+4,py+26);x.lineTo(px+22,py+20);x.closePath();x.fill()});
+    x.fillStyle=g(.18);x.beginPath();x.moveTo(0,H);x.lineTo(0,326);x.bezierCurveTo(200,316,400,330,640,320);x.lineTo(640,H);x.fill();
+    // tent
+    x.fillStyle=g(1.45);x.beginPath();x.moveTo(300,330);x.lineTo(330,292);x.lineTo(360,330);x.closePath();x.fill();
+    x.fillStyle=g(.05);x.beginPath();x.moveTo(322,330);x.lineTo(330,312);x.lineTo(338,330);x.closePath();x.fill();
+    x.fillStyle=g(0);x.font=`600 17px ${SERIF}`;x.textBaseline='top';x.fillText('Day 5 · 雪山',22,18);x.fillRect(22,42,58,2)});
+  SE=mkMap(x=>{x.fillStyle=g(.06);x.fillRect(0,0,W,H);
+    x.strokeStyle=g(1.3);x.lineWidth=5;x.lineCap='round';
+    x.beginPath();x.moveTo(110,70);x.lineTo(210,70);x.moveTo(110,290);x.lineTo(210,290);x.stroke();
+    x.lineWidth=3.5;x.beginPath();x.moveTo(122,72);x.bezierCurveTo(122,150,156,160,156,180);x.bezierCurveTo(156,200,122,210,122,288);
+    x.moveTo(198,72);x.bezierCurveTo(198,150,164,160,164,180);x.bezierCurveTo(164,200,198,210,198,288);x.stroke();
+    x.lineWidth=4;x.beginPath();x.moveTo(104,64);x.lineTo(104,296);x.moveTo(216,64);x.lineTo(216,296);x.stroke();
+    x.fillStyle=g(1.15);x.textBaseline='alphabetic';x.font=`900 72px ${SERIF}`;x.fillText('沙漏旅行',282,188);
+    x.fillStyle=g(.75);x.font=`600 19px ${SERIF}`;x.fillText('一条线路 · 三种风景',286,230);
+    x.font=`600 13px Georgia, ${SERIF}`;x.fillStyle=g(.8);const s='HOURGLASS TRAVEL';let px=287;for(const ch of s){x.fillText(ch,px,258);px+=x.measureText(ch).width+4.6}
+  },1.2);
+}
+// fixed grain + vignette at full res
+const grain=new Float32Array(FW*FH),vig=new Float32Array(FW*FH);
+(()=>{const r=rng(77);for(let y=0;y<FH;y++)for(let x=0;x<FW;x++){const i=y*FW+x;const n=r();grain[i]=.72+n*.56+(n>.985?.6:0);const dx=(x-640)/760,dy=(y-360)/520;vig[i]=1-.5*Math.pow(dx*dx+dy*dy,1.15)}})();
+// colour LUT by thickness (sand ramp: light gold-brown -> dark coffee)
+const LUT=new Uint8ClampedArray(1024*3);(()=>{const light=[255,243,219],thin=[226,182,118],thick=[52,30,15];for(let k=0;k<1024;k++){const h=k/1023*2.2;const tr=Math.exp(-2.1*h);const mixp=cl(h/1.5);const sc=[0,1,2].map(j=>L(thin[j],thick[j],Math.pow(mixp,.8)));for(let j=0;j<3;j++)LUT[k*3+j]=L(sc[j],light[j],tr)}})();
+// dynamic layer: R add, G erase
+const dc=document.createElement('canvas');dc.width=W;dc.height=H;const dx=dc.getContext('2d');
+const dc2=document.createElement('canvas');dc2.width=W;dc2.height=H;const dx2=dc2.getContext('2d',{willReadFrequently:true});
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');const img=ctx.createImageData(FW,FH),ID=img.data;
+const Hb=new Float32Array(W*H);
+const ADD=a=>`rgba(255,0,0,${a})`,ERA=a=>`rgba(0,255,0,${a})`;
+function camel(x,y,s,ph){dx.save();dx.translate(x,y);dx.scale(s,s);dx.fillStyle=ADD(.85);dx.strokeStyle=ADD(.85);dx.lineCap='round';
+  const bob=Math.abs(Math.sin(ph))*2.2;dx.translate(0,-bob);
+  dx.beginPath();dx.ellipse(0,-30,24,11,0,0,7);dx.fill();dx.beginPath();dx.ellipse(-2,-40,11,10,0,0,7);dx.fill();
+  dx.lineWidth=7;dx.beginPath();dx.moveTo(20,-32);dx.quadraticCurveTo(30,-42,30,-58);dx.stroke();dx.beginPath();dx.ellipse(35,-58,8,4.5,.2,0,7);dx.fill();
+  dx.lineWidth=4.2;const legs=[[-15,0],[-8,Math.PI],[10,Math.PI*.5],[17,Math.PI*1.5]];for(const [lx,o] of legs){const sw=Math.sin(ph+o)*7;dx.beginPath();dx.moveTo(lx,-24);dx.lineTo(lx+sw*.5,-12+bob*.3);dx.lineTo(lx+sw,0+bob);dx.stroke()}
+  dx.lineWidth=2;dx.beginPath();dx.moveTo(-24,-30);dx.quadraticCurveTo(-30,-22,-28,-14);dx.stroke();dx.restore()}
+function drawDynamic(sc,t){dx.globalCompositeOperation='source-over';dx.fillStyle='#000';dx.fillRect(0,0,W,H);dx.globalCompositeOperation='lighter';
+  if(sc===1){// camels + finger-scratched rays
+    for(let k=0;k<3;k++){const x=150+k*58+t*18,ph=t*7+k*1.3;const y=296-Math.sin((x)*.0105)*8-k*1.5;camel(x,y,.85-k*.08,ph)}
+    dx.strokeStyle=ERA(.9);dx.lineCap='round';dx.lineWidth=4.5;for(let k=0;k<9;k++){const p=eOut(P(t,1+k*.1,.22));if(p<=0)continue;const a=Math.PI*(1.05+k*.1125);dx.beginPath();dx.moveTo(470+Math.cos(a)*48,92+Math.sin(a)*48);dx.lineTo(470+Math.cos(a)*(48+p*46),92+Math.sin(a)*(48+p*46));dx.stroke()}
+    for(let k=0;k<2;k++){const p=eOut(P(t,2+k*.1,.2));if(p<=0)continue;const a=Math.PI*(.05-k*.12);dx.beginPath();dx.moveTo(470+Math.cos(a)*48,92+Math.sin(a)*48);dx.lineTo(470+Math.cos(a)*(48+p*40),92+Math.sin(a)*(48+p*40));dx.stroke()}
+  }
+  if(sc===3){const lt=t-2.6;
+    for(let k=0;k<6;k++){const q=((lt*.45+k/6)%1);const y=218+q*80;dx.strokeStyle=ADD(.55*(1-Math.abs(q-.5)*1.2));dx.lineWidth=2.2;dx.beginPath();for(let X=0;X<=W;X+=8){const yy=y+Math.sin(X*.05+k*2+lt*2)*2.2;X?dx.lineTo(X,yy):dx.moveTo(X,yy)}dx.stroke()}
+    dx.strokeStyle=ERA(.5);dx.lineWidth=3;const sw=Math.sin(lt*2)*6;dx.beginPath();for(let X=0;X<=W;X+=8){const yy=296+sw*.5+Math.sin(X*.04+lt*3)*2.5;X?dx.lineTo(X,yy):dx.moveTo(X,yy)}dx.stroke();
+    const bx=470+lt*14,by=238+Math.sin(lt*2.2)*2;dx.fillStyle=ADD(.95);dx.beginPath();dx.moveTo(bx-26,by);dx.lineTo(bx+26,by);dx.lineTo(bx+18,by+9);dx.lineTo(bx-18,by+9);dx.fill();
+    dx.beginPath();dx.moveTo(bx-1,by-3);dx.lineTo(bx-1,by-48);dx.lineTo(bx-24,by-4);dx.fill();dx.beginPath();dx.moveTo(bx+3,by-4);dx.lineTo(bx+3,by-40);dx.lineTo(bx+20,by-4);dx.fill();
+    dx.strokeStyle=ADD(.9);dx.lineWidth=2;for(let k=0;k<4;k++){const x=((lt*40+k*90)%700)-30+k*10,y=80+k*18+Math.sin(lt*3+k)*6,f=Math.sin(lt*14+k)*4;dx.beginPath();dx.moveTo(x-9,y-f);dx.quadraticCurveTo(x-4,y-3,x,y);dx.quadraticCurveTo(x+4,y-3,x+9,y-f);dx.stroke()}
+  }
+  if(sc===5){const lt=t-5.4;const r=rng(9);dx.fillStyle=ERA(1);for(let k=0;k<40;k++){const x=r()*W,y=r()*170,d=r()*2.4,sz=.9+r()*1.6;const p=eOut(P(lt,.3+d,.25));if(p>0){const tw=.8+.2*Math.sin(t*6+k);dx.beginPath();dx.arc(x,y,sz*p*tw,0,7);dx.fill();if(sz>2.1){dx.fillRect(x-sz*2.2*p,y-.5,sz*4.4*p,1);dx.fillRect(x-.5,y-sz*2.2*p,1,sz*4.4*p)}}}
+    dx.fillStyle=ERA(.45);dx.beginPath();dx.arc(330,330,10+Math.sin(t*9)*1.5,Math.PI,0);dx.fill()}
+  if(sc===9&&t>9){// hourglass sand 8.6->10
+    const fl=eIO(P(t,9,1));const topLvl=L(.95,.08,fl);dx.fillStyle=ADD(.95);
+    const tH=88*topLvl;dx.beginPath();dx.moveTo(126,170-tH*.9);dx.lineTo(194,170-tH*.9);dx.lineTo(160,176);dx.closePath();
+    dx.save();dx.beginPath();dx.moveTo(124,74);dx.bezierCurveTo(124,150,158,160,158,180);dx.lineTo(162,180);dx.bezierCurveTo(162,160,196,150,196,74);dx.closePath();dx.clip();dx.fillRect(110,178-tH*1.15,100,tH*1.15);dx.restore();
+    const bH=L(6,84,fl);dx.beginPath();dx.moveTo(124,288);dx.quadraticCurveTo(160,288-bH*1.6,196,288);dx.closePath();dx.fill();
+    if(t>9.02&&t<9.97){dx.fillRect(158.8,178,2.4,288-178-bH*.8);}
+  }}
+function render(t){
+  // which scene + transitions
+  let sc,A,B=null,front=0;
+  const waveAt=(t0)=>L(W+80,-80,eIO(P(t,t0,.75)));
+  if(t<2.6){sc=1;A=S1}else if(t<3.35){sc=3;A=S1;B=S3;front=waveAt(2.6)}else if(t<5.4){sc=3;A=S3}else if(t<6.15){sc=5;A=S3;B=S5;front=waveAt(5.4)}else if(t<8.2){sc=5;A=S5}else{sc=9;A=S5;B=SE}
+  drawDynamic(sc,t);if(B&&sc!==9){const keep=sc;}
+  dx2.filter='blur(0.8px)';dx2.globalCompositeOperation='copy';dx2.drawImage(dc,0,0);const dd=dx2.getImageData(0,0,W,H).data;
+  // previous scene dynamic items during wave: we only redraw new scene's; old scene dynamics fade under wave (acceptable)
+  const pour=t<1.0?t/1.0:2;const swirl=sc===9?P(t,8.2,.8):0;const sw=Math.sin(swirl*Math.PI);const endFade=P(t,9.82,.18);
+  const r0=rng(5);
+  for(let y=0;y<H;y++){
+    const fy=front+Math.sin(y*.045+t*7)*16+Math.sin(y*.11)*6;
+    for(let x=0;x<W;x++){const i=y*W+x;let h;
+      if(swirl>0&&swirl<1){const ddx=x-320,ddy=y-180,rr=Math.sqrt(ddx*ddx+ddy*ddy),ang=sw*5.5*Math.max(0,1-rr/420);const ca=Math.cos(ang),sa=Math.sin(ang);
+        const sx=Math.round(320+ddx*ca-ddy*sa),sy=Math.round(180+ddx*sa+ddy*ca);const j=(sx<0||sx>=W||sy<0||sy>=H)?-1:sy*W+sx;
+        const a=j<0?.3:A[j],b=j<0?.06:B[j];h=L(a,b,ss(.35,.75,swirl))+sw*.25;}
+      else if(sc===9&&swirl>=1)h=B[i];
+      else if(B){const d=x-fy;h=d>0?B[i]:A[i];h+=1.25*Math.exp(-(d+8)*(d+8)/220)+.35*Math.exp(-(d+30)*(d+30)/900)+ (d<0?.35*Math.exp(d/14)*0:0);}
+      else h=A[i];
+      {const k=i*4;h+=dd[k]/255*1.25-dd[k+1]/255*1.4;if(h<0)h=0}
+      if(pour<1.5){const edge=pour*(H+90)-y+ (Math.sin(x*.07)*14+Math.sin(x*.023+1)*22);const rv=ss(-10,20,edge);h=h*rv+ (edge>-14&&edge<12?.5*Math.exp(-edge*edge/40):0)}
+      if(endFade>0)h*=1-endFade;Hb[i]=h<0?0:h}}
+  // colourise at full res
+  let o=0;for(let Y=0;Y<FH;Y++){const row=(Y>>1)*W;for(let X=0;X<FW;X++,o+=4){const i=Y*FW+X;let h=Hb[row+(X>>1)]*grain[i];let k=(h/2.2*1023)|0;if(k>1023)k=1023;const v=vig[i]*(h<.02?1:(.92+.16*(grain[i]-.72)));const l=k*3;
+    ID[o]=LUT[l]*v;ID[o+1]=LUT[l+1]*v;ID[o+2]=LUT[l+2]*v;ID[o+3]=255}}
+  ctx.putImageData(img,0,0);
+}
+const Q=new URLSearchParams(location.search),FIX=Q.has('t')?parseFloat(Q.get('t')):null;
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);document.getElementById('stage').style.transform='scale('+s+')'}
+addEventListener('resize',fit);fit();
+let T0=null;function tick(now){if(T0===null)T0=now;const t=FIX!==null?FIX:((now-T0)/1000)%10;render(t);if(FIX===null)requestAnimationFrame(tick);else window.__ready=true}
+Promise.all([document.fonts.load(`900 72px "Noto Serif SC"`,'沙漏旅行'),document.fonts.load(`600 17px "Noto Serif SC"`,'一条线路三种风景沙漠海边雪山')]).catch(()=>{}).then(()=>document.fonts.ready).then(()=>{build();requestAnimationFrame(tick)});
+</script><!-- backlink -->
+<a id="m15back" href="../" style="position:fixed;left:14px;top:12px;z-index:99999;padding:6px 12px;border-radius:999px;background:rgba(10,10,14,.55);color:#fff;font:500 13px/1.2 -apple-system,'PingFang SC','Noto Sans CJK SC',sans-serif;text-decoration:none;backdrop-filter:blur(6px);opacity:0;transition:opacity .35s;pointer-events:none">← 返回总览</a>
+<script>(function(){if(new URLSearchParams(location.search).has('t'))return;var a=document.getElementById('m15back'),h;function s(){a.style.opacity=1;a.style.pointerEvents='auto';clearTimeout(h);h=setTimeout(function(){a.style.opacity=0;a.style.pointerEvents='none'},2200)}addEventListener('mousemove',s);addEventListener('touchstart',s)})();</script>
+</body></html>

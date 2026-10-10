@@ -1,0 +1,133 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>12 · 星球电影感 · SATURN</title>
+<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}#stage{width:1280px;height:720px;position:relative;overflow:hidden;transform-origin:center center;flex:none}</style>
+<script>
+const QT=new URLSearchParams(location.search).get('t');
+function fitStage(){const s=Math.min(innerWidth/1280,innerHeight/720);document.getElementById('stage').style.transform='scale('+s+')';}
+addEventListener('resize',()=>fitStage());
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function startLoop(draw,fl=[]){fitStage();const P=document.fonts?Promise.all(fl.map(f=>document.fonts.load(f).catch(()=>0))).then(()=>document.fonts.ready):Promise.resolve();let done=false;const go=()=>{if(!done){done=true;_go(draw)}};P.then(go,go);setTimeout(go,2500);}
+function _go(draw){const t0=performance.now();function f(now){const t=QT!==null?parseFloat(QT):((now-t0)/1000)%10;draw(t);if(QT===null)requestAnimationFrame(f);}if(QT!==null)f(0);else requestAnimationFrame(f);}
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),lerp=(a,b,t)=>a+(b-a)*t,ss=(a,b,x)=>{x=clamp((x-a)/(b-a));return x*x*(3-2*x)},eo=x=>1-Math.pow(1-clamp(x),3),eio=x=>{x=clamp(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2};
+function spring(x,z=0.7,w=14){if(x<=0)return 0;const wd=w*Math.sqrt(1-z*z);return 1-Math.exp(-z*w*x)*(Math.cos(wd*x)+z*w/wd*Math.sin(wd*x));}
+</script>
+
+<style>canvas{display:block}</style></head><body><div id="wrap"><div id="stage"><canvas id="c" width="1280" height="720"></canvas></div></div>
+<script>
+const c=document.getElementById('c'),g=c.getContext('2d');
+const rnd=mulberry(1209);
+const stars=[];for(let i=0;i<700;i++){const r=rnd();stars.push({x:rnd()*1400-60,y:rnd()*800-40,s:r<.92?rnd()*1.1+.3:rnd()*1.6+1.2,a:rnd()*.7+.3,ap:rnd()*1.15,tw:rnd()*6.28,tf:1+rnd()*3,col:rnd()<.2?'255,214,170':(rnd()<.4?'180,205,255':'235,240,255')});}
+const CX=820,CY=372,R0=132,INC=0.42,ROLL=-0.33; // ring inclination & screen roll
+const ci=Math.cos(INC),si=Math.sin(INC),cr=Math.cos(ROLL),sr=Math.sin(ROLL);
+// ring density profile
+function ringDen(r){ if(r<1.24||r>2.27)return 0; let d;
+ if(r<1.53)d=.18+.12*Math.sin(r*90); else if(r<1.95)d=.75+.2*Math.sin(r*140)+.08*Math.sin(r*411); else if(r<2.03)d=.03; else d=.5+.12*Math.sin(r*170);
+ if(Math.abs(r-2.215)<.008)d=.05; return clamp(d,0,1);}
+const RINGS=[];{const rr=mulberry(77);for(let k=0;k<228;k++){const r=1.24+k*(1.03/227);RINGS.push({r,d:ringDen(r)*(.75+.25*rr()),tint:rr()});}}
+// band colours by latitude (planet frame y)
+const bands=[[-1,[150,140,128]],[-.75,[176,160,138]],[-.5,[214,196,160]],[-.33,[196,170,128]],[-.2,[228,210,170]],[-.08,[204,178,134]],[0,[236,220,184]],[.1,[210,184,140]],[.22,[230,212,172]],[.36,[190,166,126]],[.52,[218,200,164]],[.72,[170,158,140]],[.88,[128,140,150]],[1,[110,128,146]]];
+function bandCol(y,n){y=clamp(y+n,-1,1);for(let i=0;i<bands.length-1;i++){const a=bands[i],b=bands[i+1];if(y<=b[0]){const t=(y-a[0])/(b[0]-a[0]);return [lerp(a[1][0],b[1][0],t),lerp(a[1][1],b[1][1],t),lerp(a[1][2],b[1][2],t)];}}return bands[bands.length-1][1];}
+const off=document.createElement('canvas'),og=off.getContext('2d');
+function lightAt(t){const th=lerp(172,38,eio((t-1.2)/2.2))*Math.PI/180;const L=[-Math.sin(th),-0.28,Math.cos(th)];const n=Math.hypot(...L);return L.map(v=>v/n);}
+function toPlanet(v){// view(unrolled) -> planet frame
+ return [v[0], v[1]*ci+v[2]*si, -v[1]*si+v[2]*ci];}
+function toView(p){return [p[0], p[1]*ci-p[2]*si, p[1]*si+p[2]*ci];}
+function scr(v,R,cx,cy){// unrolled view -> screen
+ const x=v[0]*R,y=v[1]*R;return [cx+x*cr-y*sr, cy+x*sr+y*cr];}
+let PC=null;
+function prep(R,S){const h=S/2;const idx=[],X=[],Y=[],Z=[],P0=[],P1=[],P2=[],CR=[],CG=[],CB=[],E=[];
+ for(let j=0;j<S;j++)for(let i=0;i<S;i++){const dx=(i+.5-h)/R,dy=(j+.5-h)/R;const rr=dx*dx+dy*dy;if(rr>1.02)continue;
+  const x=dx*cr+dy*sr,y=-dx*sr+dy*cr;const z=Math.sqrt(Math.max(0,1-x*x-y*y));const p=toPlanet([x,y,z]);const lon=Math.atan2(p[0],p[2]);
+  const nz=.018*Math.sin(p[1]*38+Math.sin(lon*3)*1.2)+.01*Math.sin(p[1]*90+lon*5);const col=bandCol(p[1],nz);
+  idx.push((j*S+i)*4);X.push(x);Y.push(y);Z.push(z);P0.push(p[0]);P1.push(p[1]);P2.push(p[2]);CR.push(col[0]);CG.push(col[1]);CB.push(col[2]);E.push(clamp((1-Math.sqrt(rr))*R+.5));}
+ const F=a=>Float32Array.from(a);PC={S,R,n:idx.length,idx:Int32Array.from(idx),X:F(X),Y:F(Y),Z:F(Z),P0:F(P0),P1:F(P1),P2:F(P2),CR:F(CR),CG:F(CG),CB:F(CB),E:F(E),img:og.createImageData(S,S)};}
+function drawPlanet(R,cx,cy,L,I,t){
+ const S=Math.ceil(R*2+6);if(!PC||PC.S!==S){off.width=off.height=S;prep(R,S);}
+ const {n,idx,X,Y,Z,P0,P1,P2,CR,CG,CB,E,img}=PC;const D=img.data;const Lp=toPlanet(L);const h=S/2;
+ const Lxy=Math.max(.001,Math.hypot(L[0],L[1]));const bk=clamp(-L[2]);
+ for(let q=0;q<n;q++){const x=X[q],y=Y[q],z=Z[q];
+  const dif=x*L[0]+y*L[1]+z*L[2];let lit=dif*1.05+.04;lit=lit<0?0:(lit>1?1:lit);lit=Math.pow(lit,.85);
+  const term=Math.exp(-(dif/.12)*(dif/.12))*.25;
+  let rs=1;if(Lp[1]!==0){const tt=-P1[q]/Lp[1];if(tt>0){const qx=P0[q]+tt*Lp[0],qz=P2[q]+tt*Lp[2];rs=1-ringDen(Math.sqrt(qx*qx+qz*qz))*.75;}}
+  lit*=rs;const fz=1-z;const fres=Math.pow(fz,2.2);const rimF=fres*clamp(dif+.35)*.9;
+  const back=bk>0?Math.pow(fz,5)*bk*clamp((x*L[0]+y*L[1])/Lxy+.2)*2.4:0;
+  const k=idx[q];D[k]=(CR[q]*lit+term*90+rimF*120+back*220+6)*I;D[k+1]=(CG[q]*lit+term*60+rimF*160+back*230+9)*I;D[k+2]=(CB[q]*lit*.92+term*30+rimF*255+back*255+16)*I;D[k+3]=255*E[q];}
+ og.putImageData(img,0,0);g.drawImage(off,cx-h,cy-h);
+}
+function drawRings(R,cx,cy,L,I,front){
+ g.lineWidth=Math.max(.8,R*1.03/227*1.25);
+ const N=110;
+ for(const rg of RINGS){ if(rg.d<.02)continue;
+  const lit=[],sh=[];
+  const ph0=front?-.03:Math.PI-.03;
+  for(let k=0;k<=N;k++){const ph=ph0+k/N*(Math.PI+.06);const p=[rg.r*Math.cos(ph),0,rg.r*Math.sin(ph)];const v=toView(p);
+   const d=v[0]*L[0]+v[1]*L[1]+v[2]*L[2];let shadow=false;if(d<0){const px=v[0]-d*L[0],py=v[1]-d*L[1],pz=v[2]-d*L[2];if(px*px+py*py+pz*pz<1)shadow=true;}
+   (shadow?sh:lit).push([k,scr(v,R,cx,cy),true]);}
+  const fwd=clamp(-L[2])*.6;
+  const a=rg.d*I*lerp(.3,1,eio((T_-1.2)/2.2));
+  const col=`rgba(${Math.round(lerp(196,236,rg.tint))},${Math.round(lerp(182,214,rg.tint))},${Math.round(lerp(156,186,rg.tint))},`;
+  strokeRuns(lit,col+(a*(.55+.45*clamp(1-fwd)))+')');strokeRuns(sh,col+(a*.12)+')');}
+}
+function strokeRuns(arr,style){g.strokeStyle=style;g.beginPath();let prev=-9;for(const [k,p,ok] of arr){if(!ok)continue;if(k===prev+1)g.lineTo(p[0],p[1]);else g.moveTo(p[0],p[1]);prev=k;}g.stroke();}
+function orbitPt(r,ph){return toView([r*Math.cos(ph),0,r*Math.sin(ph)]);}
+function draw(t){T_=t;
+ g.setTransform(1,0,0,1,0,0);g.fillStyle='#02040a';g.fillRect(0,0,1280,720);
+ const zoom=1+.075*eio(t/10)+.01*t/10;
+ // nebula haze
+ const hz=g.createRadialGradient(CX-60,CY-40,20,CX,CY,620);hz.addColorStop(0,'rgba(40,62,110,.28)');hz.addColorStop(.5,'rgba(18,28,58,.14)');hz.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=hz;g.fillRect(0,0,1280,720);
+ const wm=g.createRadialGradient(200,640,10,200,640,500);wm.addColorStop(0,'rgba(120,70,40,.10)');wm.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=wm;g.fillRect(0,0,1280,720);
+ // stars
+ const sz=1+(zoom-1)*.35;
+ for(const s of stars){const ap=clamp((t-s.ap)/.25);if(ap<=0)continue;const x=640+(s.x-640)*sz,y=360+(s.y-360)*sz;const tw=.75+.25*Math.sin(t*s.tf+s.tw);
+  g.fillStyle=`rgba(${s.col},${s.a*ap*tw})`;g.beginPath();g.arc(x,y,s.s*.6,0,7);g.fill();
+  if(s.s>1.6){g.fillStyle=`rgba(${s.col},${.12*ap*tw})`;g.beginPath();g.arc(x,y,s.s*2.6,0,7);g.fill();}}
+ const R=R0*zoom,cx=640+(CX-640)*zoom,cy=360+(CY-360)*zoom;
+ const L=lightAt(t);const I=ss(.5,1.7,t);
+ // orbits (behind)
+ const ob=[[2.75,ss(2.8,4.1,t)],[3.45,ss(3.3,4.8,t)]];
+ function orbit(front){for(const [r,pr] of ob){if(pr<=0)continue;g.strokeStyle=`rgba(150,185,235,${front?.34:.2})`;g.lineWidth=1;g.setLineDash(front?[]:[3,5]);g.beginPath();let st=false;const N=240;for(let k=0;k<=N*pr;k++){const ph=-1.2+k/N*6.2832;const v=orbitPt(r,ph);const p=scr(v,R,cx,cy);if((v[2]>0)!==front){st=false;continue;}if(!st){g.moveTo(...p);st=true}else g.lineTo(...p);}g.stroke();g.setLineDash([]);}}
+ const moons=[[2.75,.9+t*.22,4.2,'#d9d2c4',2.8],[3.45,3.6+t*.15,4.6,'#b9c6d8',2.1]];
+ function drawMoons(front){moons.forEach(([r,ph,tin,col,ms])=>{const a=ss(tin,tin+.6,t);if(a<=0)return;const v=orbitPt(r,ph);if((v[2]>0)!==front)return;const p=scr(v,R,cx,cy);
+  // occluded by planet?
+  if(!front&&Math.hypot(v[0],v[1])<1)return;
+  const rr=ms*zoom;const gr=g.createRadialGradient(p[0]+L[0]*rr*.6,p[1]+L[1]*rr*.6,0,p[0],p[1],rr);gr.addColorStop(0,col);gr.addColorStop(1,'#1a1d24');g.globalAlpha=a;g.fillStyle=gr;g.beginPath();g.arc(p[0],p[1],rr,0,7);g.fill();
+  g.fillStyle='rgba(180,210,255,.15)';g.beginPath();g.arc(p[0],p[1],rr*3,0,7);g.fill();g.globalAlpha=1;});}
+ orbit(false);drawMoons(false);
+ drawRings(R,cx,cy,L,I,false);
+ // glow halo behind planet when backlit
+ const bl=clamp(-L[2])*I;if(bl>0){const hg=g.createRadialGradient(cx,cy,R*.95,cx,cy,R*1.6);hg.addColorStop(0,`rgba(170,200,255,${.35*bl})`);hg.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=hg;g.beginPath();g.arc(cx,cy,R*1.6,0,7);g.fill();}
+ drawPlanet(R,cx,cy,L,I,t);
+ drawRings(R,cx,cy,L,I,true);
+ orbit(true);drawMoons(true);
+ // subtle anamorphic flare at lit limb during reveal
+ const fl=Math.exp(-Math.pow((t-1.9)/.6,2))*.5;if(fl>.01){const fx=cx+L[0]*R*.98*cr,fy=cy-R*.25;const fg=g.createLinearGradient(fx-500,fy,fx+500,fy);fg.addColorStop(0,'rgba(80,140,255,0)');fg.addColorStop(.5,`rgba(170,205,255,${fl})`);fg.addColorStop(1,'rgba(80,140,255,0)');g.fillStyle=fg;g.fillRect(fx-500,fy-1.5,1000,3);}
+ // vignette
+ const vg=g.createRadialGradient(640,360,300,640,360,820);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.65)');g.fillStyle=vg;g.fillRect(0,0,1280,720);
+ // letterbox
+ g.fillStyle='#000';g.fillRect(0,0,1280,64);g.fillRect(0,656,1280,64);
+ // text
+ const serif='"Noto Serif SC","Cormorant Garamond","Songti SC","Source Han Serif SC",Georgia,serif';
+ function txt(s,x,y,font,a,col='232,236,245',ls=0){if(a<=0)return;g.font=font;g.fillStyle=`rgba(${col},${a})`;g.letterSpacing=ls+'px';g.fillText(s,x,y);g.letterSpacing='0px';}
+ const fin=(t0,d=.6)=>eo((t-t0)/d)*(1-ss(9.55,9.95,t));
+ const a1=fin(.5);txt('CHAPTER XII',96,128+(1-a1)*6,'300 15px '+serif,a1*.85,'232,236,245',6);
+ g.fillStyle=`rgba(200,170,120,${a1*.7})`;g.fillRect(96,140,lerp(0,36,a1),1);
+ const a2=fin(.9);txt('距太阳 14.3 亿公里',96,172+(1-a2)*6,'300 17px '+serif,a2*.75,'210,220,236',2);
+ const data=[[3.7,'赤道直径','120,536 km'],[4.3,'一天','约 10 小时 33 分'],[4.9,'平均密度','0.69 g/cm³ · 比水还轻']];
+ data.forEach(([t0,k,v],i)=>{const a=fin(t0,.7);const y=440+i*44;if(a<=0)return;
+  g.fillStyle=`rgba(150,185,235,${a*.5})`;g.fillRect(96,y-15,1,20);
+  txt(k,110+(1-a)*-8,y,'300 13px '+serif,a*.6,'170,190,220',3);
+  txt(v,200+(1-a)*-8,y,'300 19px "Helvetica Neue","Inter",Arial,sans-serif',a*.95,'236,240,248',1);});
+ // tiny frame counter
+ txt('T+'+t.toFixed(2).padStart(5,'0'),1110,46,'300 11px "Courier New",monospace',.35,'200,210,230',2);
+ txt('CASSINI DIVISION · 4,800 km',1060,688,'300 11px "Helvetica Neue",Arial,sans-serif',.35*fin(4.9),'200,210,230',2);
+ txt('SATURN — EQUINOX ORBIT VIEW',96,688,'300 11px "Helvetica Neue",Arial,sans-serif',.35*fin(.9),'200,210,230',3);
+ const at=ss(7.2,8.4,t)*(1-ss(9.55,9.95,t));
+ if(at>0){g.save();g.filter=`blur(${(1-at)*6}px)`;txt('土星',96,610,'200 64px '+serif,at,'240,236,228',14);
+  txt('SATURN',300,606,'300 26px '+serif,at*.85,'214,196,160',lerp(30,16,at));g.restore();}
+ // global fade for loop
+ const fade=Math.max(1-ss(0,.35,t),ss(9.6,10,t));if(fade>0){g.fillStyle=`rgba(0,0,0,${fade})`;g.fillRect(0,0,1280,720);}
+}
+startLoop(draw);
+</script><!-- backlink -->
+<a id="m15back" href="../" style="position:fixed;left:14px;top:12px;z-index:99999;padding:6px 12px;border-radius:999px;background:rgba(10,10,14,.55);color:#fff;font:500 13px/1.2 -apple-system,'PingFang SC','Noto Sans CJK SC',sans-serif;text-decoration:none;backdrop-filter:blur(6px);opacity:0;transition:opacity .35s;pointer-events:none">← 返回总览</a>
+<script>(function(){if(new URLSearchParams(location.search).has('t'))return;var a=document.getElementById('m15back'),h;function s(){a.style.opacity=1;a.style.pointerEvents='auto';clearTimeout(h);h=setTimeout(function(){a.style.opacity=0;a.style.pointerEvents='none'},2200)}addEventListener('mousemove',s);addEventListener('touchstart',s)})();</script>
+</body></html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>15 · 手绘漫画分格</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=JetBrains+Mono:wght@400;700&family=Bangers&display=swap" rel="stylesheet">
+<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}#stage{width:1280px;height:720px;position:relative;overflow:hidden;transform-origin:center center;flex:none}</style>
+<script>
+const QT=new URLSearchParams(location.search).get('t');
+function fitStage(){const s=Math.min(innerWidth/1280,innerHeight/720);document.getElementById('stage').style.transform='scale('+s+')';}
+addEventListener('resize',()=>fitStage());
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function startLoop(draw,fl=[]){fitStage();const P=document.fonts?Promise.all(fl.map(f=>document.fonts.load(f).catch(()=>0))).then(()=>document.fonts.ready):Promise.resolve();let done=false;const go=()=>{if(!done){done=true;_go(draw)}};P.then(go,go);setTimeout(go,2500);}
+function _go(draw){const t0=performance.now();function f(now){const t=QT!==null?parseFloat(QT):((now-t0)/1000)%10;draw(t);if(QT===null)requestAnimationFrame(f);}if(QT!==null)f(0);else requestAnimationFrame(f);}
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),lerp=(a,b,t)=>a+(b-a)*t,ss=(a,b,x)=>{x=clamp((x-a)/(b-a));return x*x*(3-2*x)},eo=x=>1-Math.pow(1-clamp(x),3),eio=x=>{x=clamp(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2};
+function spring(x,z=0.7,w=14){if(x<=0)return 0;const wd=w*Math.sqrt(1-z*z);return 1-Math.exp(-z*w*x)*(Math.cos(wd*x)+z*w/wd*Math.sin(wd*x));}
+</script>
+
+<style>#stage{background:#0f1016}svg{display:block}</style></head><body><div id="wrap"><div id="stage">
+<svg id="s" width="1280" height="720" viewBox="0 0 1280 720">
+<defs>
+ <pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><rect width="10" height="10" fill="#F3E7CF"/><line x1="0" y1="0" x2="0" y2="10" stroke="#E6D5B4" stroke-width="2"/></pattern>
+ <pattern id="dots" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="1.3" fill="rgba(0,0,0,.08)"/></pattern>
+ <linearGradient id="ultra" x1="0" x2="1"><stop offset="0" stop-color="#8B5CF6"/><stop offset="1" stop-color="#EC4899"/></linearGradient>
+ <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter>
+ <g id="clips"></g>
+</defs>
+<g id="term"></g>
+<g id="comic"></g>
+<g id="pow"></g>
+</svg></div></div>
+<script>
+const $=id=>document.getElementById(id);
+const HAND='"HanziPen SC","Ma Shan Zheng","Kaiti SC",KaiTi,cursive',MONO='"JetBrains Mono","SF Mono",Menlo,monospace';
+const CORAL='#FF7A59',INK='#1a1a1a';
+// ---------- terminal
+function term(t){if(t>2.62){$('term').innerHTML='';return;}
+ const sh=t>2.38?eo((t-2.38)/.2):0;
+ const X=190,Y=110,W=900,H=500;let o=`<g transform="translate(${640*(1-(1+sh*.3))+0},${360*(1-(1+sh*.3))}) scale(${1+sh*.3})" opacity="${1-sh}">`;
+ o+=`<rect width="1280" height="720" fill="#14151d"/><rect x="0" y="0" width="1280" height="720" fill="url(#dots)" opacity=".5"/>`;
+ o+=`<rect x="${X}" y="${Y+14}" width="${W}" height="${H}" rx="16" fill="#000" opacity=".45" filter="blur(0)"/><rect x="${X}" y="${Y}" width="${W}" height="${H}" rx="16" fill="#1b1d27" stroke="#2c2f3d"/>`;
+ o+=`<path d="M${X} ${Y+16} a16 16 0 0 1 16 -16 H${X+W-16} a16 16 0 0 1 16 16 V${Y+42} H${X}Z" fill="#232634"/>`;
+ ['#FF5F57','#FEBC2E','#28C840'].forEach((c,i)=>o+=`<circle cx="${X+24+i*22}" cy="${Y+21}" r="6.5" fill="${c}"/>`);
+ o+=`<text x="${X+W/2}" y="${Y+26}" fill="#7c8195" font-family='${MONO}' font-size="13" text-anchor="middle">film — zsh — 120×32</text>`;
+ const tx=(x,y,s,c='#E6E8F0',w=400)=>`<text x="${x}" y="${y}" fill="${c}" font-family='${MONO}' font-size="20" font-weight="${w}" xml:space="preserve">${s}</text>`;
+ const cmd='make-film --crew 8 --style comic';const nT=Math.floor(clamp((t-.2)/.7)*cmd.length);
+ let ly=Y+92;o+=tx(X+36,ly,'~/film','#7DD3FC',700)+tx(X+118,ly,'❯','#C084FC',700)+tx(X+146,ly,cmd.slice(0,nT));
+ const cur=(x,y)=>`<rect x="${x}" y="${y-18}" width="11" height="22" fill="#E6E8F0" opacity="${Math.sin(t*14)>-.2?1:0}"/>`;
+ if(t<1.0)o+=cur(X+146+nT*12.04,ly);
+ if(t>=1.0){ly+=46;const sel=t<1.25?0:t<1.45?1:t<1.65?2:3;o+=tx(X+36,ly,'?','#4ADE80',700)+tx(X+60,ly,'Effort','#E6E8F0',700)+tx(X+146,ly,'(← → to choose)','#6b7086');
+  ly+=50;const opts=['low','medium','high','ULTRA'];let x=X+60;opts.forEach((s,i)=>{const w=s.length*12.04+28;const on=i===sel;
+   if(on)o+=`<rect x="${x-14}" y="${ly-25}" width="${w}" height="36" rx="8" fill="${i===3?'url(#ultra)':'#3b3f55'}"/>`+(i===3?`<rect x="${x-14}" y="${ly-25}" width="${w}" height="36" rx="8" fill="none" stroke="#f9a8d4" stroke-opacity=".6"/>`:'');
+   o+=tx(x,ly,s,on?'#fff':'#6b7086',on||i===3?700:400);x+=w+22;});
+   // key press indicators
+  [1.25,1.45,1.65].forEach(k=>{const a=Math.exp(-Math.pow((t-k)/.08,2));if(a>.02)o+=`<g opacity="${a}"><rect x="${X+W-110}" y="${Y+H-80}" width="56" height="50" rx="10" fill="#2c3042" stroke="#4b5068"/><text x="${X+W-82}" y="${Y+H-46}" fill="#fff" font-size="24" text-anchor="middle" font-family='${MONO}'>→</text></g>`;});
+  const ea=Math.exp(-Math.pow((t-1.85)/.08,2));if(ea>.02)o+=`<g opacity="${ea}"><rect x="${X+W-130}" y="${Y+H-80}" width="76" height="50" rx="10" fill="#2c3042" stroke="#4b5068"/><text x="${X+W-92}" y="${Y+H-46}" fill="#fff" font-size="22" text-anchor="middle" font-family='${MONO}'>↵</text></g>`;}
+ if(t>=1.85){ly+=50;o+=tx(X+36,ly,'↵ effort set to ','#9aa0b8')+`<text x="${X+36+16*12.04}" y="${ly}" fill="url(#ultra)" font-family='${MONO}' font-size="20" font-weight="700">ULTRA</text>`;}
+ [[1.95,'writing script…'],[2.08,'casting crew (8)…'],[2.2,'rolling camera…']].forEach(([k,s])=>{if(t>=k){ly+=38;o+=tx(X+36,ly,'✓','#4ADE80',700)+tx(X+64,ly,s,'#cfd3e2');}});
+ o+='</g>';$('term').innerHTML=o;}
+// ---------- POW
+function starPath(cx,cy,r1,r2,n,rot){let d='';for(let i=0;i<n*2;i++){const a=rot+i*Math.PI/n;const r=i%2?r2*(1+.12*Math.sin(i*2.7)):r1*(1+.15*Math.cos(i*1.9));d+=(i?'L':'M')+(cx+Math.cos(a)*r).toFixed(1)+' '+(cy+Math.sin(a)*r).toFixed(1);}return d+'Z';}
+function pow(t){const k=t-2.3;if(k<0||k>.75){$('pow').innerHTML='';return;}
+ const s=k<.12?eo(k/.12)*1.15:1.15-.15*eo((k-.12)/.2);const a=1-ss(.5,.75,k);
+ $('pow').innerHTML=`<g opacity="${a}" transform="translate(640,360) scale(${s}) rotate(${-6+k*8})"><path d="${starPath(0,0,330,190,14,0.2)}" fill="#111" transform="translate(10,12)"/><path d="${starPath(0,0,330,190,14,0.2)}" fill="#FFD43B" stroke="#111" stroke-width="8" stroke-linejoin="round"/><path d="${starPath(0,0,220,150,12,0.5)}" fill="#FFF1A6" opacity=".7"/>
+ <text x="0" y="62" text-anchor="middle" font-family='"Bangers","Impact",sans-serif' font-size="190" fill="#E8262E" stroke="#111" stroke-width="12" paint-order="stroke" letter-spacing="6" transform="rotate(-4)">POW!</text></g>`;}
+// ---------- monsters
+function scallop(r,n=12,b=.09){let d='';for(let i=0;i<=n*6;i++){const a=i/(n*6)*Math.PI*2;const rr=r*(1+b*Math.abs(Math.cos(a*n/2)));d+=(i?'L':'M')+(Math.cos(a)*rr).toFixed(1)+' '+(Math.sin(a)*rr*.95).toFixed(1);}return d+'Z';}
+function monster(x,y,s,t,ph,hat='',hand='',look=0){const bob=Math.sin(t*6+ph)*3;const bl=((t+ph)%3)>2.85?.15:1;
+ let o=`<g transform="translate(${x},${y+bob}) scale(${s})" stroke="${INK}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">`;
+ o+=`<path d="M-18 34 v14 h-8 M18 34 v14 h8" fill="none"/>`; // legs
+ o+=`<path d="M-8 -36 L-16 -54 L-2 -40 M8 -36 L16 -54 L2 -40" fill="#FFB199"/>`; // horns
+ o+=`<path d="${scallop(40)}" fill="${CORAL}"/>`;
+ o+=`<ellipse cx="0" cy="12" rx="22" ry="16" fill="#FFA184" stroke="none"/>`;
+ o+=`<g transform="translate(${look},0)"><ellipse cx="-13" cy="-6" rx="10" ry="${12*bl}" fill="#fff"/><ellipse cx="13" cy="-6" rx="10" ry="${12*bl}" fill="#fff"/>${bl>.5?`<circle cx="${-11+look*.3}" cy="-4" r="5" fill="${INK}" stroke="none"/><circle cx="${15+look*.3}" cy="-4" r="5" fill="${INK}" stroke="none"/><circle cx="${-9}" cy="-7" r="1.6" fill="#fff" stroke="none"/><circle cx="17" cy="-7" r="1.6" fill="#fff" stroke="none"/>`:''}</g>`;
+ o+=`<path d="M-7 14 Q0 21 7 14" fill="none"/><circle cx="-26" cy="8" r="4" fill="#FF5C7A" stroke="none" opacity=".55"/><circle cx="26" cy="8" r="4" fill="#FF5C7A" stroke="none" opacity=".55"/>`;
+ o+=hand+hat+'</g>';return o;}
+const ground=(sky='#CFEBFF')=>`<rect width="400" height="230" fill="${sky}"/><rect width="400" height="230" fill="url(#dots)"/><path d="M0 172 Q100 160 200 170 T400 166 V230 H0Z" fill="#7BC96F" stroke="${INK}" stroke-width="3"/><path d="M0 190 Q120 184 240 192 T400 190 V230 H0Z" fill="#5DB35A" opacity=".6"/>`+[30,90,150,260,330,370].map(x=>`<path d="M${x} 186 l3 -8 l3 8" stroke="#3c8c3a" stroke-width="2" fill="none"/>`).join('');
+const say=(x,y,txt,sz=30,a=1,sc=1)=>`<g transform="translate(${x},${y}) scale(${sc})" opacity="${a}"><path d="M-${txt.length*sz*.55+16} -${sz*.9} h${(txt.length*sz*.55+16)*2} a14 14 0 0 1 0 ${sz*1.6} h-${(txt.length*sz*.55+16)*2-40} l-14 16 l2 -16 h-0 a14 14 0 0 1 -0 -${sz*1.6}Z" fill="#fff" stroke="${INK}" stroke-width="3"/><text x="0" y="${sz*.28}" text-anchor="middle" font-family='${HAND}' font-size="${sz}" fill="${INK}">${txt}</text></g>`;
+const fx=(x,y,txt,sz,rot,col='#FFD43B',a=1)=>`<text x="${x}" y="${y}" transform="rotate(${rot} ${x} ${y})" text-anchor="middle" font-family='${HAND}' font-size="${sz}" fill="${col}" stroke="${INK}" stroke-width="3" paint-order="stroke" opacity="${a}">${txt}</text>`;
+const SC={
+ director:(t,k,rd=0)=>ground('#FFE3B3')+`<g stroke="${INK}" stroke-width="3"><path d="M150 205 L170 150 M250 205 L230 150 M162 175 H238" fill="none"/><rect x="152" y="140" width="96" height="16" fill="#8B5A2B"/><rect x="160" y="96" width="80" height="34" fill="#C0392B"/><text x="200" y="120" text-anchor="middle" font-family='${HAND}' font-size="18" fill="#fff" stroke="none">导演</text></g>`
+  +monster(200,118,1,t,0,`<path d="M-30 -36 Q-26 -60 6 -58 Q34 -56 30 -40 Q0 -30 -30 -36Z" fill="#2b2b3a"/><circle cx="6" cy="-60" r="4" fill="#2b2b3a"/>`,
+   `<g transform="translate(40,-6) rotate(${-15+Math.sin(t*10)*6})"><path d="M0 0 L36 -16 L36 16Z" fill="#FFD43B"/><rect x="-10" y="-5" width="12" height="10" fill="#888"/></g>`)
+  +(k>.15?say(lerp(118,200,rd),lerp(52,42,rd),'开拍！',30,1,spring(k-.15,.5,14)*lerp(1,.7,rd)):'')+[0,1,2].map(i=>`<path d="M${290+i*8} ${84-i*14} l${18} ${-6+i*6}" stroke="${INK}" stroke-width="3" opacity="${.5+.5*Math.sin(t*12+i)}"/>`).join(''),
+ writer:(t)=>{const up=(t*30)%40;return ground()+`<g stroke="${INK}" stroke-width="3"><rect x="${208}" y="${70-up*.6}" width="70" height="${70+up*.6}" fill="#fff"/>${[0,1,2,3].map(i=>`<line x1="216" x2="${262-i*6}" y1="${86+i*12-up*.6}" y2="${86+i*12-up*.6}" stroke-width="2"/>`).join('')}<rect x="186" y="130" width="116" height="46" rx="8" fill="#4A6FA5"/><rect x="196" y="140" width="96" height="10" fill="#2b3a55"/>${[0,1,2,3,4,5].map(i=>`<circle cx="${204+i*16}" cy="${162-(Math.sin(t*20+i*2)>.6?3:0)}" r="5" fill="#eee"/>`).join('')}</g>`+monster(120,128,.85,t,1,`<path d="M-24 -40 h48 l-6 -16 h-36Z" fill="#6C5CE7"/>`,`<path d="M30 10 L58 30" fill="none"/>`,4)+fx(330,70,'哒哒哒',30,-10,'#FFD43B',.6+.4*Math.abs(Math.sin(t*10)));},
+ clap:(t)=>{const c=((t*1.6)%1);const ang=c<.7?-28*(c/.7):(c<.78?-28*(1-(c-.7)/.08):0);const snap=c>=.78&&c<.95;return ground('#E5DCFF')+`<g transform="translate(250,120)" stroke="${INK}" stroke-width="3"><rect x="-50" y="0" width="100" height="62" fill="#222"/>${[0,1,2].map(i=>`<line x1="-40" x2="40" y1="${16+i*15}" y2="${16+i*15}" stroke="#fff" stroke-width="2"/>`).join('')}<g transform="rotate(${ang} -50 0)"><rect x="-50" y="-16" width="100" height="16" fill="#fff"/>${[0,1,2,3].map(i=>`<path d="M${-44+i*26} -16 l12 0 l-8 16 l-12 0Z" fill="#222" stroke="none"/>`).join('')}</g></g>`+monster(130,126,.85,t,2,`<rect x="-30" y="-44" width="60" height="10" fill="#FFD43B"/><path d="M-22 -44 Q0 -66 22 -44Z" fill="#FFD43B"/>`,`<path d="M36 -4 L76 -10" fill="none"/>`)+(snap?fx(320,78,'咔！',44,8,'#FF5A5A'):'');},
+ camera:(t)=>ground('#D7F4E8')+`<g stroke="${INK}" stroke-width="3" fill="none"><path d="M230 140 L200 205 M240 140 L240 205 M250 140 L280 205"/></g><g stroke="${INK}" stroke-width="3"><rect x="196" y="98" width="96" height="46" rx="8" fill="#555"/><path d="M292 108 L326 96 V146 L292 134Z" fill="#777"/>${[[214,72],[262,72]].map(([x,y],i)=>`<g transform="translate(${x},${y}) rotate(${t*360*(i?1:-1)})"><circle r="22" fill="#333"/>${[0,1,2,3,4].map(j=>`<circle cx="${Math.cos(j*1.256)*11}" cy="${Math.sin(j*1.256)*11}" r="4" fill="#bbb" stroke-width="1.5"/>`).join('')}</g>`).join('')}<circle cx="210" cy="110" r="6" fill="${Math.sin(t*10)>0?'#FF3B3B':'#661818'}"/></g>`+monster(110,126,.85,t,3,`<path d="M-26 -40 Q0 -62 26 -40Z" fill="#E74C3C"/><path d="M20 -42 h22" stroke-width="5"/>`,'',6),
+ edit:(t)=>ground('#FFE0EC')+`<g stroke="${INK}" stroke-width="3"><path d="M180 172 H340 L326 156 H194Z" fill="#999"/><rect x="196" y="76" width="130" height="82" rx="6" fill="#1f2230"/>${[['#FF7A59',0,40],['#6C63FF',44,30],['#12A38A',78,36]].map(([c,x,w],i)=>`<rect x="${206+x}" y="${92+i*16}" width="${w}" height="10" rx="3" fill="${c}" stroke="none"/>`).join('')}<line x1="${206+((t*40)%108)}" x2="${206+((t*40)%108)}" y1="86" y2="146" stroke="#fff" stroke-width="2"/></g><g transform="translate(330,64) rotate(${Math.sin(t*12)*14})" stroke="${INK}" stroke-width="3"><path d="M0 0 L30 -14 M0 0 L30 14" /><circle cx="-8" cy="-6" r="7" fill="#FF5A8A"/><circle cx="-8" cy="8" r="7" fill="#FF5A8A"/></g>`+monster(110,126,.85,t,4,`<path d="M-30 -30 Q-30 -56 0 -56 Q30 -56 30 -30" fill="none" stroke-width="5"/><rect x="-36" y="-36" width="12" height="18" rx="4" fill="#333"/><rect x="24" y="-36" width="12" height="18" rx="4" fill="#333"/>`,'',6),
+ lights:(t)=>{const f=.55+.45*Math.abs(Math.sin(t*9))*(Math.sin(t*23)>-.3?1:.3);return ground('#2E3150')+`<path d="M270 70 L170 200 L380 200Z" fill="#FFF3B0" opacity="${f*.6}"/><g stroke="${INK}" stroke-width="3"><path d="M270 70 L300 205 M270 70 L240 205" fill="none"/><rect x="250" y="44" width="44" height="36" rx="6" fill="#444" transform="rotate(20 272 62)"/></g>`+monster(120,128,.85,t,5,`<path d="M-24 -42 h48 v-6 h-48Z" fill="#FFD43B"/><circle cx="0" cy="-52" r="8" fill="#FFF3B0"/>`,'',5);},
+ sound:(t)=>{const sw=Math.sin(t*3)*10;return ground('#DFF1FF')+`<g transform="rotate(${sw} 150 140)" stroke="${INK}" stroke-width="3"><path d="M150 140 L300 60" fill="none" stroke-width="5"/><ellipse cx="312" cy="58" rx="22" ry="12" fill="#8a8a8a"/>${[0,1,2].map(i=>`<path d="M330 ${66+i*3} q10 6 0 14" fill="none" opacity="${.3+.7*Math.abs(Math.sin(t*6+i))}"/>`).join('')}</g>`+monster(130,128,.85,t,6,`<path d="M-30 -30 Q-30 -56 0 -56 Q30 -56 30 -30" fill="none" stroke-width="5"/><circle cx="-30" cy="-26" r="9" fill="#12A38A"/><circle cx="30" cy="-26" r="9" fill="#12A38A"/>`,`<path d="M30 0 L50 18" fill="none"/>`,4);},
+ fx:(t)=>ground('#F0E2FF')+`<g stroke="${INK}" stroke-width="3"><path d="M220 150 L330 150 L320 200 L230 200Z" fill="#B57CFF"/><path d="M220 150 L205 128 M330 150 L345 128" fill="none"/></g>`+[0,1,2,3,4].map(i=>{const p=((t*.9+i*.2)%1);return `<path d="${starPath(0,0,13,6,5,-1.57)}" transform="translate(${275+Math.sin(i*2.3)*40*p},${150-p*130}) rotate(${p*200})" fill="#FFD43B" stroke="${INK}" stroke-width="2" opacity="${1-p}"/>`}).join('')+monster(120,128,.85,t,7,`<path d="M0 -40 L-18 -76 L18 -76Z" fill="#6C63FF"/><circle cx="0" cy="-78" r="5" fill="#FFD43B"/>`,`<path d="M36 -6 L60 -24" fill="none"/><path d="${starPath(62,-28,8,4,5,0)}" fill="#FFD43B"/>`),
+ music:(t)=>ground('#FFF0D0')+[0,1,2,3].map(i=>{const p=((t*.7+i*.25)%1);return `<g transform="translate(${230+i*30+Math.sin(p*8)*10},${170-p*150})" opacity="${1-p}" stroke="${INK}" stroke-width="3"><ellipse cx="0" cy="0" rx="9" ry="7" fill="${['#FF7A59','#6C63FF','#12A38A','#FF5A8A'][i]}"/><path d="M8 0 V-28 L20 -22" fill="none"/></g>`}).join('')+monster(140,128,.85,t,8,`<path d="M-20 -42 Q0 -60 20 -42" fill="#333"/>`,`<g transform="translate(46,10)"><path d="M0 0 Q20 -30 40 0 Q20 20 0 0Z" fill="#C68642" stroke="${INK}" stroke-width="3"/><path d="M30 -4 L70 -30" stroke="${INK}" stroke-width="4"/></g>`)
+};
+// ---------- layout
+const PG={x:30,y:26,w:1220,h:668};const GAP=16;
+function cell3(r,c){const w=(PG.w-GAP*2)/3,h=(PG.h-GAP*2)/3;return {x:PG.x+c*(w+GAP),y:PG.y+r*(h+GAP),w,h,rx:6};}
+function cell2(r,c){const w=(PG.w-GAP)/2,h=(PG.h-GAP)/2;return {x:PG.x+c*(w+GAP),y:PG.y+r*(h+GAP),w,h,rx:6};}
+const PANELS=[['writer',[0,0],[0,0]],['clap',[0,1],[0,2]],['camera',[1,0],[2,0]],['edit',[1,1],[2,2]],['lights',null,[0,1]],['sound',null,[1,0]],['fx',null,[1,2]],['music',null,[2,1]]];
+const mixR=(a,b,k)=>({x:lerp(a.x,b.x,k),y:lerp(a.y,b.y,k),w:lerp(a.w,b.w,k),h:lerp(a.h,b.h,k),rx:lerp(a.rx,b.rx,k)});
+const grow=(r,k)=>{const cx=r.x+r.w/2,cy=r.y+r.h/2;return {x:cx-r.w*k/2,y:cy-r.h*k/2,w:r.w*k,h:r.h*k,rx:r.rx};};
+function panel(id,r,content,k){if(r.w<2)return '';return `<clipPath id="cp${id}"><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="${r.rx}"/></clipPath><g clip-path="url(#cp${id})"><svg x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" viewBox="0 0 400 230" preserveAspectRatio="xMidYMid slice">${content}</svg></g><rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="${r.rx}" fill="none" stroke="${INK}" stroke-width="5"/>`;}
+function comic(t){if(t<2.38){$('comic').innerHTML='';return;}
+ let o=`<rect width="1280" height="720" fill="url(#hatch)"/>`;
+ // page white gutter
+ o+=`<rect x="${PG.x-12}" y="${PG.y-12}" width="${PG.w+24}" height="${PG.h+24}" fill="#fff" stroke="#D9C9A8" stroke-width="2"/>`;
+ const kA=spring(t-4.05,.72,10),kB=spring(t-6.15,.72,10);
+ const full={x:PG.x,y:PG.y,w:PG.w,h:PG.h,rx:6};const circ={x:640-130,y:360-130,w:260,h:260,rx:130};const c3=cell3(1,1);
+ let dr=t<4.05?full:(t<6.15?mixR(full,circ,kA):mixR(circ,c3,kB));
+ // panels
+ const rects={};
+ PANELS.forEach(([id,p2,p3],i)=>{let r;
+  if(p2){const a=cell2(...p2),b=cell3(...p3);if(t<4.05)return;r=t<6.15?grow(a,clamp(spring(t-4.05-.12-i*.06,.7,11),0,1.05)):mixR(a,b,kB);}
+  else{if(t<6.15)return;r=grow(cell3(...p3),clamp(spring(t-6.15-.12-(i-4)*.06,.7,11),0,1.05));}
+  rects[id]=r;o+=panel(id,r,SC[id](t),0);});
+ // dashed lines from director to cells (in layout 3)
+ if(t>6.3){const a=ss(6.3,6.8,t);const dc={x:dr.x+dr.w/2,y:dr.y+dr.h/2};
+  for(const id in rects){if(['writer','clap','camera','edit','lights','sound','fx','music'].indexOf(id)<0)continue;const r=rects[id];const ex=r.x+r.w/2,ey=r.y+r.h/2;const mx=(dc.x+ex)/2+(ey-dc.y)*.15,my=(dc.y+ey)/2-(ex-dc.x)*.15;
+   const d=`M${dc.x} ${dc.y} Q${mx} ${my} ${ex} ${ey}`;o+=`<path d="${d}" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" opacity="${a*.8}"/><path d="${d}" fill="none" stroke="#7C4DFF" stroke-width="4" stroke-dasharray="12 9" stroke-dashoffset="${-t*60}" stroke-linecap="round" opacity="${a}"/>`;
+   const p=((t*.6)+id.length*.13)%1;const qx=(1-p)*(1-p)*dc.x+2*(1-p)*p*mx+p*p*ex,qy=(1-p)*(1-p)*dc.y+2*(1-p)*p*my+p*p*ey;o+=`<circle cx="${qx}" cy="${qy}" r="7" fill="#FFD43B" stroke="${INK}" stroke-width="2.5" opacity="${a}"/>`;}}
+ // director on top
+ o+=panel('director',dr,SC.director(t,t-2.5,clamp(dr.rx/(Math.min(dr.w,dr.h)/2))),0);
+ // checks
+ const order=['writer','lights','clap','sound','director','fx','camera','music','edit'];
+ order.forEach((id,i)=>{const t0=8.25+i*(0.75/8);if(t<t0)return;const r=id==='director'?dr:rects[id];if(!r)return;const s=spring(t-t0,.45,18);
+  o+=`<g transform="translate(${r.x+r.w-26},${r.y+26}) scale(${s})"><circle r="17" fill="#22C55E" stroke="${INK}" stroke-width="3.5"/><path d="M-8 0 L-2 6 L9 -6" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>`;});
+ // banner
+ if(t>9.1){const s=spring(t-9.1,.55,13);o+=`<g transform="translate(640,${lerp(800,640,s)}) rotate(-2)"><path d="M-330 -40 H330 L310 0 L330 40 H-330 L-310 0Z" fill="#000" transform="translate(6,7)"/><path d="M-330 -40 H330 L310 0 L330 40 H-330 L-310 0Z" fill="#FFD43B" stroke="${INK}" stroke-width="5" stroke-linejoin="round"/><text y="16" text-anchor="middle" font-family='${HAND}' font-size="46" fill="${INK}">一行命令，剧组全员开工！</text></g>`;}
+ // fade to black for loop
+ const fd=ss(9.8,10,t);if(fd>0)o+=`<rect width="1280" height="720" fill="#14151d" opacity="${fd}"/>`;
+ $('comic').innerHTML=o;}
+function draw(t){term(t);comic(t);pow(t);}
+startLoop(draw,['40px "Ma Shan Zheng"','20px "JetBrains Mono"','700 20px "JetBrains Mono"','100px Bangers']);
+</script><!-- backlink -->
+<a id="m15back" href="../" style="position:fixed;left:14px;top:12px;z-index:99999;padding:6px 12px;border-radius:999px;background:rgba(10,10,14,.55);color:#fff;font:500 13px/1.2 -apple-system,'PingFang SC','Noto Sans CJK SC',sans-serif;text-decoration:none;backdrop-filter:blur(6px);opacity:0;transition:opacity .35s;pointer-events:none">← 返回总览</a>
+<script>(function(){if(new URLSearchParams(location.search).has('t'))return;var a=document.getElementById('m15back'),h;function s(){a.style.opacity=1;a.style.pointerEvents='auto';clearTimeout(h);h=setTimeout(function(){a.style.opacity=0;a.style.pointerEvents='none'},2200)}addEventListener('mousemove',s);addEventListener('touchstart',s)})();</script>
+</body></html>

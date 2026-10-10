@@ -1,0 +1,156 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>06 · Neo-Brutalism — How AI Decides</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+html,body{margin:0;height:100%;background:#111;overflow:hidden}
+#wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#stage{width:1280px;height:720px;position:relative;transform-origin:center;flex:none;background:#F1EEE8}
+svg{display:block}
+</style></head><body><div id="wrap"><div id="stage"><svg id="svg" width="1280" height="720" viewBox="0 0 1280 720"><g id="bg"></g><g id="dyn"></g></svg></div></div>
+<script>
+const W=1280,H=720,DUR=10;
+const IMP="Impact,Anton,'Haettenschweiler','Arial Narrow Bold',sans-serif";
+const MONO="'SF Mono',Menlo,'JetBrains Mono','IBM Plex Mono',Consolas,monospace";
+const PINK='#FF2E93',BLUE='#2F5BFF',BG='#F1EEE8';
+const cl=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)),lerp=(a,b,u)=>a+(b-a)*u;
+const ss=u=>{u=cl(u);return u*u*(3-2*u)};
+const eo=u=>1-Math.pow(1-cl(u),3), eio=u=>{u=cl(u);return u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2};
+const eob=u=>{u=cl(u);const c=1.70158,c3=c+1;return 1+c3*Math.pow(u-1,3)+c*Math.pow(u-1,2)};
+const P=(t,a,b)=>cl((t-a)/(b-a));
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+// fit
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H);document.getElementById('stage').style.transform=`scale(${s})`}
+addEventListener('resize',fit);fit();
+// halftone background (static)
+(function(){let o='';
+ function blob(cx,cy,R,col,step){for(let y=-R;y<=R;y+=step)for(let x=-R;x<=R;x+=step){const row=Math.round((y+R)/step);const xx=x+(row%2?step/2:0);
+  // 45deg staggered grid
+  const px=cx+(xx-y)*0.7071,py=cy+(xx+y)*0.7071;const d=Math.hypot(px-cx,py-cy)/R;if(d>1)continue;const r=(1-d)*step*0.46;if(r<0.5)continue;
+  o+=`<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="${r.toFixed(2)}" fill="${col}"/>`}}
+ blob(1190,120,260,PINK,15);blob(70,650,250,PINK,15);blob(1180,660,120,BLUE,13);
+ // window bar
+ o+=`<rect x="0" y="0" width="1280" height="46" fill="#fff" stroke="#000" stroke-width="3"/>`;
+ o+=`<line x1="0" y1="46" x2="1280" y2="46" stroke="#000" stroke-width="3"/>`;
+ [['#FF2E93',28],['#FFC700',50],['#2F5BFF',72]].forEach(([c,x])=>o+=`<circle cx="${x}" cy="23" r="7" fill="${c}" stroke="#000" stroke-width="2.5"/>`);
+ o+=`<text x="100" y="29" font-family="${MONO}" font-size="16" font-weight="700" fill="#000">how-ai-decides.deck</text>`;
+ o+=`<text x="1252" y="29" text-anchor="end" font-family="${MONO}" font-size="16" font-weight="700" fill="#000" xml:space="preserve">04 / 07   TYPED ANSWERS</text>`;
+ document.getElementById('bg').innerHTML=o})();
+
+// card primitive
+function card(x,y,w,h,head,headCol,{shadow=8,inner='',ghost=0,headH=40}={}){
+ let o=`<g opacity="${ghost?ghost:1}">`;
+ if(!ghost)o+=`<rect x="${x+shadow}" y="${y+shadow}" width="${w}" height="${h}" fill="#000"/>`;
+ o+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${ghost?'none':'#fff'}" stroke="#000" stroke-width="3"/>`;
+ if(!ghost){o+=`<rect x="${x}" y="${y}" width="${w}" height="${headH}" fill="${headCol}" stroke="#000" stroke-width="3"/>`;
+ o+=`<rect x="${x+w-48}" y="${y+headH/2-7}" width="14" height="14" fill="#fff" stroke="#000" stroke-width="2"/><rect x="${x+w-26}" y="${y+headH/2-7}" width="14" height="14" fill="#fff" stroke="#000" stroke-width="2"/>`;
+ o+=`<text x="${x+16}" y="${y+headH/2+6}" font-family="${MONO}" font-size="17" font-weight="800" fill="#fff" letter-spacing="2">${head}</text>`;
+ o+=inner;}
+ return o+'</g>'}
+// drop: returns {dy,sh}
+function drop(t,t0){const u=t-t0;if(u<0)return null;const fall=0.32;
+ if(u<fall){const k=u/fall;return{dy:-(1-k*k)*620,sh:8+(1-k*k)*44}}
+ const v=u-fall;const b=Math.abs(Math.sin(v*Math.PI/0.17))*26*Math.exp(-v*9);return{dy:-b,sh:8+b*0.6}}
+function typed(s,t,t0,cps){const n=Math.floor(cl((t-t0)*cps,0,s.length));return s.slice(0,n)}
+function caret(t){return (Math.floor(t*3)%2)?'':'▌'}
+// pseudo-noise
+function nz(i,t){return Math.sin(t*7.1+i*1.7)*.5+Math.sin(t*12.3+i*4.1)*.3+Math.sin(t*19.7+i*2.3)*.2}
+
+const SMALL=[{x:96,y:250,w:300,h:250},{x:490,y:250,w:300,h:250},{x:884,y:250,w:300,h:250}];
+const BIG={x:110,y:196,w:1060,h:468};
+const SCOREW=930;
+
+function frame(t){
+ let o='';
+ // tag
+ const tg=eob(P(t,0.2,0.5));
+ if(t>=0.2){o+=`<g transform="translate(80,${84}) scale(${tg},1)"><rect x="0" y="0" width="372" height="30" fill="${PINK}" stroke="#000" stroke-width="3"/><text x="12" y="21" font-family="${MONO}" font-size="14" font-weight="800" fill="#fff" letter-spacing="1">AI ENGINEERING · HOW IT DECIDES</text></g>`}
+ // titles
+ const out1=P(t,2.9,3.2), in2=P(t,3.0,3.45);
+ if(t>=0.2&&out1<1){const a=eo(P(t,0.25,0.6));o+=`<text x="${80-(1-a)*40}" y="${178-out1*40}" opacity="${a*(1-out1)}" font-family="${IMP}" font-size="60" fill="#000" letter-spacing="1">LET EACH PART DO ITS JOB</text>`}
+ if(in2>0){const a=eob(in2);o+=`<text x="640" y="${174-(1-a)*30}" text-anchor="middle" opacity="${cl(in2*2)}" font-family="${IMP}" font-size="60" fill="#000" letter-spacing="1">THE ANSWER IS A <tspan fill="${PINK}">NUMBER</tspan></text>`}
+
+ // ===== phase 1: three cards
+ const exp=eio(P(t,2.9,3.45));
+ if(t<3.5){
+  const side=P(t,2.9,3.25);
+  // arrows + caption
+  if(t>1.25&&side<1){const a=eo(P(t,1.25,1.6))*(1-side);
+   for(const ax of [396+14,790+14]){const len=66*a;o+=`<g opacity="${a}"><line x1="${ax}" y1="375" x2="${ax+len}" y2="375" stroke="#000" stroke-width="5"/>${a>.6?`<polygon points="${ax+len+2},375 ${ax+len-14},364 ${ax+len-14},386" fill="#000"/>`:''}</g>`}
+   const cap='an LLM reads, a model scores, and code acts';o+=`<text x="640" y="562" text-anchor="middle" opacity="${1-side}" font-family="${MONO}" font-size="20" fill="#000">${esc(typed(cap,t,1.4,40))}</text>`}
+  const defs=[['READS',BLUE,'LLM',0.5],['SCORES',PINK,'MODEL',0.75],['ACTS','#000','CODE',1.0]];
+  defs.forEach((d,i)=>{const dr=drop(t,d[3]);if(!dr)return;let r=SMALL[i];let dx=0,op=1;
+   if(i!==1){dx=(i===0?-1:1)*eio(side)*700;}
+   if(i===1&&t>=2.9)return;
+   let inner=`<text x="${r.x+20}" y="${r.y+dr.dy+112}" font-family="${IMP}" font-size="64" fill="#000">${d[2]}</text>`;
+   if(i===0){inner+=`<text x="${r.x+20}" y="${r.y+dr.dy+150}" font-family="${MONO}" font-size="14" fill="#000">reads the email,</text><text x="${r.x+20}" y="${r.y+dr.dy+170}" font-family="${MONO}" font-size="14" fill="#000">pulls out the facts</text>`;
+     ['subject','body','sender'].forEach((s,k)=>inner+=`<rect x="${r.x+20+k*88}" y="${r.y+dr.dy+192}" width="80" height="26" fill="${k==0?'#E6ECFF':'#fff'}" stroke="#000" stroke-width="2"/><text x="${r.x+60+k*88}" y="${r.y+dr.dy+210}" text-anchor="middle" font-family="${MONO}" font-size="12" fill="#000">${s}</text>`)}
+   if(i===1){const g=eo(P(t,1.2,2.2));[['outage',.91],['billing',.06],['other',.03]].forEach(([n,v],k)=>{const yy=r.y+dr.dy+142+k*30;
+     inner+=`<text x="${r.x+20}" y="${yy+14}" font-family="${MONO}" font-size="13" fill="#000">${n}</text><rect x="${r.x+96}" y="${yy}" width="140" height="18" fill="#fff" stroke="#000" stroke-width="2"/><rect x="${r.x+96}" y="${yy}" width="${140*v*g}" height="18" fill="${k==0?PINK:'#000'}"/><text x="${r.x+282}" y="${yy+14}" text-anchor="end" font-family="${MONO}" font-size="13" font-weight="700" fill="#000">${(v*g).toFixed(2)}</text>`})}
+   if(i===2){const s=typed('$ route --to on-call',t,1.5,16);inner+=`<rect x="${r.x+18}" y="${r.y+dr.dy+146}" width="${r.w-36}" height="60" fill="#111"/><text x="${r.x+30}" y="${r.y+dr.dy+182}" font-family="${MONO}" font-size="16" fill="#7CFFB2">${esc(s)}${caret(t)}</text>`}
+   o+=`<g transform="translate(${dx},0)">`+card(r.x,r.y+dr.dy,r.w,r.h,d[0],d[1],{shadow:dr.sh,inner})+'</g>';
+  });
+ }
+ // ===== phase 2: big CHOICE card
+ const car=eio(P(t,6.9,7.5));
+ if(t>=2.9){
+  const rect=at=>{const e=eio(P(at,2.9,3.45));const s=SMALL[1];return{x:lerp(s.x,BIG.x,e),y:lerp(s.y,BIG.y,e),w:lerp(s.w,BIG.w,e),h:lerp(s.h,BIG.h,e)}};
+  let r=rect(t);const cx=-car*1250;
+  // ghosts (motion blur)
+  if(t<3.5){[0.05,0.1].forEach((dt,k)=>{const g=rect(t-dt);o+=`<rect x="${g.x}" y="${g.y}" width="${g.w}" height="${g.h}" fill="#000" opacity="${k?0.08:0.16}"/><rect x="${g.x}" y="${g.y}" width="${g.w}" height="${g.h}" fill="none" stroke="#000" stroke-width="3" opacity="${k?0.25:0.45}"/>`})}
+  if(car<1){
+  let inner='';const X=r.x+cx,Y=r.y,show=P(t,3.4,3.6);
+  if(show>0){
+   const q=typed('which queue does this email go to?',t,3.5,30);
+   inner+=`<g opacity="${show}"><text x="${X+36}" y="${Y+92}" font-family="${MONO}" font-size="24" font-weight="700" fill="#000">&gt; ${esc(q)}${t<4.8?caret(t):''}</text>`;
+   const em=eo(P(t,4.6,4.9));
+   inner+=`<g opacity="${em}" transform="translate(${(1-em)*-20},0)"><rect x="${X+36}" y="${Y+118}" width="560" height="56" fill="#FFF2F8" stroke="#000" stroke-width="2.5" stroke-dasharray="8 5"/><rect x="${X+36}" y="${Y+118}" width="8" height="56" fill="${PINK}"/><text x="${X+60}" y="${Y+153}" font-family="${MONO}" font-size="19" font-style="italic" fill="#000">“server's down, clients can't log in!!”</text></g>`;
+   // bars
+   const names=['outage','billing','sales','spam','other'],target=[.91,.04,.02,.01,.02];
+   const ba=P(t,4.9,5.1);
+   if(ba>0){let raw=names.map((n,i)=>Math.max(0.05,1+nz(i,t*1.4)*0.9+ (i==0?0.3:0)));const sum=raw.reduce((a,b)=>a+b);raw=raw.map(v=>v/sum);
+    const lock=ss(P(t,5.25,5.7));const vals=raw.map((v,i)=>lerp(v,target[i],lock));
+    const bx=X+180,bw=560,by=Y+200;
+    names.forEach((n,i)=>{const yy=by+i*44;const win=i==0&&t>=5.7;const v=vals[i]*eo(ba);
+     inner+=`<text x="${X+36}" y="${yy+24}" font-family="${MONO}" font-size="20" font-weight="${win?800:500}" fill="#000">${n}</text>`;
+     inner+=`<rect x="${bx+6}" y="${yy+6}" width="${bw*v}" height="30" fill="#000" opacity="${win?1:0}"/><rect x="${bx}" y="${yy}" width="${bw}" height="30" fill="none" stroke="#000" stroke-width="2.5" stroke-dasharray="${win?'':'2 6'}"/>`;
+     inner+=`<rect x="${bx}" y="${yy}" width="${Math.max(2,bw*v)}" height="30" fill="${win?PINK:(i==0?'#000':'#222')}" stroke="#000" stroke-width="2.5"/>`;
+     inner+=`<text x="${bx+bw+24}" y="${yy+24}" font-family="${MONO}" font-size="22" font-weight="800" fill="${win?PINK:'#000'}">${v.toFixed(2)}</text>`;});
+    if(t>=5.7){const w=eob(P(t,5.7,6.0));inner+=`<g transform="translate(${X+940},${by+18}) scale(${w}) rotate(-6)"><rect x="-74" y="-26" width="148" height="52" fill="${PINK}" stroke="#000" stroke-width="3"/><rect x="-74" y="-26" width="148" height="52" fill="none" stroke="#000" stroke-width="3" transform="translate(6,6)" opacity=".0"/><text x="0" y="10" text-anchor="middle" font-family="${IMP}" font-size="30" fill="#fff">WINNER</text></g>`;
+     inner+=`<text x="${X+36}" y="${Y+450}" font-family="${MONO}" font-size="15" fill="#000" opacity="${eo(P(t,6,6.3))}">probabilities sum to 1.00 → pick the max → a typed answer, not prose.</text>`}
+   }
+   inner+='</g>';
+  }
+  o+=card(X,Y,r.w,r.h,t<3.15?'SCORES':'CHOICE',PINK,{inner,headH:lerp(40,46,exp)});
+  }
+  // ===== phase 3: SCORE card + YES/NO peek
+  if(car>0){const X=BIG.x+(1-car)*1250,Y=BIG.y,w=SCOREW,h=BIG.h;let inner='';
+   // ruler
+   const rx=X+70,rw=w-140,ry=Y+210;
+   const ra=eo(P(t,7.4,7.9));
+   inner+=`<line x1="${rx}" y1="${ry}" x2="${rx+rw*ra}" y2="${ry}" stroke="#000" stroke-width="5"/>`;
+   for(let k=0;k<=30;k++){const xx=rx+rw*k/30;if(k/30>ra)break;const maj=k%10==0;inner+=`<line x1="${xx}" y1="${ry}" x2="${xx}" y2="${ry-(maj?34:k%5==0?22:12)}" stroke="#000" stroke-width="${maj?4:2}"/>`;if(maj)inner+=`<text x="${xx}" y="${ry+44}" text-anchor="middle" font-family="${IMP}" font-size="38" fill="#000">${k/10}</text>`}
+   // pointer
+   const pa=P(t,7.7,8.5);let pv=0;if(pa>0){const u=pa;pv=2.8*(1-Math.exp(-6*u)*Math.cos(9*u)) ; pv=cl(pv,0,3)}
+   if(t>=7.7){const px=rx+rw*pv/3;inner+=`<polygon points="${px},${ry-44} ${px-18},${ry-80} ${px+18},${ry-80}" fill="${PINK}" stroke="#000" stroke-width="3"/><text x="${px}" y="${ry-90}" text-anchor="middle" font-family="${MONO}" font-size="16" font-weight="800" fill="#000">${pv.toFixed(1)}</text>`;}
+   inner+=`<text x="${X+36}" y="${Y+92}" font-family="${MONO}" font-size="24" font-weight="700" fill="#000">&gt; how urgent is it? (0–3)</text>`;
+   // stamp
+   if(t>=8.5){const k=P(t,8.5,8.75);const s=lerp(2.2,1,eo(k));inner+=`<g transform="translate(${X+w-170},${Y+372}) rotate(-10) scale(${s})" opacity="${cl(k*3)}"><rect x="-92" y="-56" width="184" height="112" fill="none" stroke="${PINK}" stroke-width="6"/><rect x="-82" y="-46" width="164" height="92" fill="none" stroke="${PINK}" stroke-width="2.5"/><text x="0" y="30" text-anchor="middle" font-family="${IMP}" font-size="84" fill="${PINK}">2.8</text></g>`}
+   ['0  can wait','1  this week','2  today','3  drop everything'].forEach((s,i)=>{const a=eo(P(t,8.6+i*0.22,8.9+i*0.22));if(a<=0)return;const yy=Y+316+i*36;
+    inner+=`<g opacity="${a}" transform="translate(${(1-a)*-24},0)"><rect x="${X+40}" y="${yy-18}" width="22" height="22" fill="${i==3?PINK:['#fff','#ddd','#888'][i]}" stroke="#000" stroke-width="2.5"/><text x="${X+76}" y="${yy}" font-family="${MONO}" font-size="20" font-weight="${i==3?800:500}" fill="#000" xml:space="preserve">${s}</text></g>`});
+   // yes/no peek
+   const pk=eio(P(t,7.1,7.8));const PX=lerp(1400,X+w+44,pk);
+   o+=card(PX,Y+30,320,h-60,'YES / NO','#000',{inner:`<text x="${PX+24}" y="${Y+160}" font-family="${IMP}" font-size="58" fill="#000">YES</text><text x="${PX+24}" y="${Y+230}" font-family="${IMP}" font-size="58" fill="#bbb">NO</text>`});
+   o+=card(X,Y,w,h,'SCORE',BLUE,{inner});
+  }
+ }
+ // loop fade
+ const f=P(t,9.65,10);if(f>0)o+=`<rect x="0" y="47" width="1280" height="673" fill="${BG}" opacity="${ss(f)}"/>`;
+ document.getElementById('dyn').innerHTML=o;
+}
+// time
+const q=new URLSearchParams(location.search);const FT=q.has('t')?parseFloat(q.get('t')):null;let t0=null;
+function loop(now){if(t0===null)t0=now;const t=FT!==null?FT:((now-t0)/1000)%DUR;frame(t);if(FT===null)requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+</script><!-- backlink -->
+<a id="m15back" href="../" style="position:fixed;left:14px;top:12px;z-index:99999;padding:6px 12px;border-radius:999px;background:rgba(10,10,14,.55);color:#fff;font:500 13px/1.2 -apple-system,'PingFang SC','Noto Sans CJK SC',sans-serif;text-decoration:none;backdrop-filter:blur(6px);opacity:0;transition:opacity .35s;pointer-events:none">← 返回总览</a>
+<script>(function(){if(new URLSearchParams(location.search).has('t'))return;var a=document.getElementById('m15back'),h;function s(){a.style.opacity=1;a.style.pointerEvents='auto';clearTimeout(h);h=setTimeout(function(){a.style.opacity=0;a.style.pointerEvents='none'},2200)}addEventListener('mousemove',s);addEventListener('touchstart',s)})();</script>
+</body></html>

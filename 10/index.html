@@ -1,0 +1,157 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>10 · 配方图解 — 山野柠檬茶</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>html,body{margin:0;height:100%;background:#E9E4D8;overflow:hidden}
+#wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#stage{width:1280px;height:720px;flex:none;background:#FBF8F1}svg{display:block}</style></head>
+<body><div id="wrap"><div id="stage"><svg id="svg" width="1280" height="720" viewBox="0 0 1280 720">
+<defs>
+<filter id="rough" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.2"/></filter>
+<filter id="paper"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" seed="3"/><feColorMatrix values="0 0 0 0 0.45  0 0 0 0 0.38  0 0 0 0 0.28  0 0 0 0.06 0"/></filter>
+<linearGradient id="glass" x1="0" x2="1"><stop offset="0" stop-color="#CFE6F2" stop-opacity=".75"/><stop offset=".25" stop-color="#EAF5FA" stop-opacity=".35"/><stop offset=".8" stop-color="#D7ECF5" stop-opacity=".4"/><stop offset="1" stop-color="#BFDDEC" stop-opacity=".8"/></linearGradient>
+<linearGradient id="tea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8B04B" stop-opacity=".62"/><stop offset="1" stop-color="#C98A2C" stop-opacity=".78"/></linearGradient>
+<clipPath id="cup"><path d="M306 254 L336 606 Q338 614 346 614 L514 614 Q522 614 524 606 L554 254 Z"/></clipPath>
+<clipPath id="numclip"><rect x="830" y="236" width="360" height="118"/></clipPath>
+<pattern id="straw" width="22" height="22" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="22" height="22" fill="#fff"/><rect width="11" height="22" fill="#E4574A"/></pattern>
+</defs>
+<rect width="1280" height="720" fill="#FBF8F1"/><rect width="1280" height="720" filter="url(#paper)"/>
+<g id="dyn"></g></svg></div></div>
+<script>
+const W=1280,H=720,DUR=10;
+const SERIF="'Songti SC','STSong','Noto Serif CJK SC','Source Han Serif SC',serif";
+const SANS="'PingFang SC','Noto Sans CJK SC','Microsoft YaHei',sans-serif";
+const NUMF="'Didot','Bodoni 72','Playfair Display','Noto Serif CJK SC',Georgia,serif";
+const INK='#33404A',RED='#E4574A';
+const cl=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)),lerp=(a,b,u)=>a+(b-a)*u,P=(t,a,b)=>cl((t-a)/(b-a));
+const eo=u=>1-Math.pow(1-cl(u),3),eio=u=>{u=cl(u);return u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2};
+const eob=u=>{u=cl(u);const c=1.7,c3=c+1;return 1+c3*Math.pow(u-1,3)+c*Math.pow(u-1,2)};
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H);document.getElementById('stage').style.transform=`scale(${s})`}
+addEventListener('resize',fit);fit();
+// drop with bounce: returns 0..1 progress of position (can overshoot) — y = lerp(from,to,f)
+function fall(t,t0,d=0.38){const u=(t-t0)/d;if(u<0)return null;if(u<1)return u*u;const v=(u-1)*d;return 1-Math.abs(Math.sin(v*Math.PI/0.16))*0.09*Math.exp(-v*10)}
+function draw(t,t0,d){return eio(P(t,t0,t0+d))}
+const STEPS=[
+ {t:0.8,n:'150',u:'g',name:'冰块',tip:'先把杯子冰透，喝到最后都是凉的'},
+ {t:2.4,n:'½',u:'个',name:'香水柠檬',tip:'切片后暴打 3 下，香气才出得来'},
+ {t:4.6,n:'300',u:'ml',name:'茉莉绿茶',tip:'冷泡 8 小时，不苦不涩'},
+ {t:7.0,n:'15',u:'ml',name:'冰糖浆',tip:'怕甜可以减半'}];
+const ICE=[{x:372,y:566,r:-8,t:0.95},{x:452,y:570,r:10,t:1.25},{x:404,y:510,r:16,t:1.55},{x:478,y:514,r:-12,t:1.85}];
+const LEM=[{x:388,y:462,r:-14,t:2.55},{x:470,y:458,r:12,t:2.75},{x:430,y:440,r:4,t:2.95}];
+const HITS=[3.45,3.85,4.25];
+function cupX(y){const k=(y-254)/360;return[lerp(306,336,k),lerp(554,524,k)]}
+function level(t){return lerp(612,322,eio(P(t,5.0,6.8)))}
+function ice(x,y,r,s=1){return `<g transform="translate(${x} ${y}) rotate(${r}) scale(${s})"><rect x="-31" y="-29" width="62" height="58" rx="11" fill="#F3FAFD" fill-opacity=".85" stroke="${INK}" stroke-width="2"/><path d="M-20 -16 L-6 -20" stroke="#fff" stroke-width="5" stroke-linecap="round"/><path d="M-22 -8 L-22 6" stroke="#BCDDEB" stroke-width="3" stroke-linecap="round"/><path d="M14 18 L22 10" stroke="#BCDDEB" stroke-width="2.5" stroke-linecap="round"/></g>`}
+function lemon(x,y,r,sq=1){let seg='';for(let i=0;i<8;i++){const a=i*Math.PI/4;seg+=`<line x1="0" y1="0" x2="${Math.cos(a)*25}" y2="${Math.sin(a)*25}" stroke="#F5E07A" stroke-width="2.2"/>`}
+ return `<g transform="translate(${x} ${y}) rotate(${r}) scale(1 ${0.42*sq})"><circle r="36" fill="#F3D23A" stroke="${INK}" stroke-width="${2/0.6}"/><circle r="30" fill="#FFF3A6" /><circle r="27" fill="#FBE36A"/>${seg}<circle r="3" fill="#FFF8CF"/></g>`}
+function frame(t){let o='';
+ // ---------- title ----------
+ const TT='山野柠檬茶';[...TT].forEach((ch,i)=>{const f=fall(t,0.08+i*0.09,0.32);if(f===null)return;const y=lerp(-60,150,f);
+  const fade=t>8.2?1-P(t,8.2,8.45):1;o+=`<text x="${80+i*84}" y="${y}" font-family="${SERIF}" font-weight="900" font-size="80" fill="${RED}" opacity="${fade}">${ch}</text>`});
+ { const a=P(t,0.5,0.85)*(t>8.2?1-P(t,8.2,8.45):1);o+=`<text x="84" y="200" opacity="${a}" font-family="${SANS}" font-size="24" fill="${INK}" letter-spacing="3">香水柠檬 · 暴打 · 茉莉绿茶</text><line x1="84" y1="${222}" x2="${84+392*draw(t,0.45,0.4)}" y2="222" stroke="${INK}" stroke-width="1.5" opacity="${t>8.2?1-P(t,8.2,8.45):1}"/>`}
+ // ---------- glass contents (clipped) ----------
+ let inside='';
+ // ice
+ const pound=HITS.reduce((s,h)=>s+(t>=h?1:0),0);
+ ICE.forEach((c,i)=>{const f=fall(t,c.t,0.4);if(f===null)return;const y=lerp(-80,c.y,f);inside+=ice(c.x,y,c.r+(1-cl(f))*30)});
+ // lemons
+ LEM.forEach((c,i)=>{const f=fall(t,c.t,0.36);if(f===null)return;let y=lerp(-60,c.y,f);let sq=1-pound*0.12;
+  // squash at hit
+  for(const h of HITS){const d=t-h;if(d>=0&&d<0.18)sq*=1-0.25*Math.sin(d/0.18*Math.PI);}
+  inside+=lemon(c.x+(i-1)*pound*3,y+pound*5,c.r+pound*(i-1)*6,sq)});
+ // tea liquid
+ const lv=level(t);
+ if(t>=4.95){const [xl,xr]=cupX(lv);let d=`M${xl-10} 640 L${xl-10} ${lv}`;const amp=t<6.8?4:lerp(4,1.5,P(t,6.8,8));
+  for(let x=xl-10;x<=xr+10;x+=8)d+=` L${x} ${lv+Math.sin(x*0.045+t*6)*amp+Math.sin(x*0.09-t*4)*amp*0.4}`;d+=` L${xr+10} 640 Z`;
+  inside+=`<path d="${d}" fill="url(#tea)"/>`;inside+=`<path d="${d.replace(/ L[\d.]+ 640 Z$/,'').replace(/^M[\d.-]+ 640 L/,'M')}" fill="none" stroke="#B5781F" stroke-width="2" opacity=".6"/>`;
+  // bubbles while pouring
+  if(t<6.9){for(let i=0;i<9;i++){const ph=(t*1.3+i*0.37)%1;const bx=380+((i*53)%120);const by=lerp(605,lv+8,ph);if(by>lv+4)inside+=`<circle cx="${bx}" cy="${by}" r="${2+i%3}" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="1.5"/>`}}}
+ // syrup ripples
+ [7.15,7.4,7.65].forEach(td=>{const hit=td+0.32;if(t>hit&&t<hit+0.8){const k=(t-hit)/0.8;inside+=`<ellipse cx="455" cy="${lv}" rx="${10+k*60}" ry="${3+k*8}" fill="none" stroke="#8B5A12" stroke-width="2" opacity="${1-k}"/>`}});
+ // straw (inside part)
+ const sk=t>=7.8?eob(P(t,7.8,8.15)):0;
+ const straw=(clipIn)=>{if(sk<=0)return'';const y=lerp(-420,0,sk);return `<g transform="translate(${470} ${y+150}) rotate(14)"><rect x="-9" y="0" width="18" height="470" rx="6" fill="url(#straw)" stroke="${INK}" stroke-width="2"/></g>`};
+ inside+=straw();
+ o+=`<g clip-path="url(#cup)">${inside}</g>`;
+ // muddler (above cup)
+ if(t>3.1&&t<4.65){const inK=eo(P(t,3.1,3.35)),outK=eio(P(t,4.35,4.62));let off=0;
+  for(const h of HITS){const d=t-h;if(d>-0.2&&d<0.2){off=Math.max(off,1-Math.abs(d)/0.2)}}
+  const y=lerp(-300,164,inK)-outK*470+off*50;
+  o+=`<g transform="translate(432 ${y}) rotate(-6)"><rect x="-14" y="0" width="28" height="176" rx="10" fill="#C99A63" stroke="${INK}" stroke-width="2.2"/><rect x="-19" y="166" width="38" height="90" rx="12" fill="#B07F48" stroke="${INK}" stroke-width="2.2"/><path d="M-6 20 L-6 150" stroke="#E2BE8E" stroke-width="3" stroke-linecap="round"/></g>`;
+  for(const h of HITS){const d=t-h;if(d>=0&&d<0.35){const k=d/0.35;for(let i=0;i<7;i++){const a=-Math.PI*(0.15+0.7*i/6);o+=`<circle cx="${432+Math.cos(a)*(30+k*90)}" cy="${448+Math.sin(a)*(20+k*70)+k*k*60}" r="${4*(1-k)+1}" fill="#F3D23A" stroke="${INK}" stroke-width="1"/>`}
+   o+=`<text x="${575+k*10}" y="${420-k*20}" font-family="${SANS}" font-weight="900" font-size="30" fill="${RED}" opacity="${1-k}">砰!</text>`}}}
+ // teapot
+ if(t>4.5&&t<7.1){const inK=eo(P(t,4.5,4.8)),outK=eio(P(t,6.7,7.05));const tilt=lerp(0,-38,eio(P(t,4.75,5.0)))*(1-eio(P(t,6.55,6.85)));
+  const x=lerp(820,640,inK)+outK*220,y=150-outK*30;
+  o+=`<g opacity="${1-outK}" transform="translate(${x} ${y}) rotate(${tilt})" filter="url(#rough)"><ellipse cx="0" cy="0" rx="78" ry="62" fill="#F4F1E8" stroke="${INK}" stroke-width="2.4"/><path d="M-70 -6 Q-118 -22 -126 -52" fill="none" stroke="${INK}" stroke-width="11" stroke-linecap="round"/><path d="M-70 -6 Q-118 -22 -126 -52" fill="none" stroke="#F4F1E8" stroke-width="6" stroke-linecap="round"/><path d="M70 -24 Q122 -10 74 34" fill="none" stroke="${INK}" stroke-width="5"/><ellipse cx="0" cy="-58" rx="36" ry="10" fill="#F4F1E8" stroke="${INK}" stroke-width="2.4"/><circle cx="0" cy="-72" r="8" fill="#9FC9A0" stroke="${INK}" stroke-width="2"/><path d="M-40 6 Q0 26 40 6" fill="none" stroke="#9FC9A0" stroke-width="3"/><text x="-16" y="40" font-family="${SERIF}" font-size="20" fill="#7FA580">茉莉</text></g>`;
+  // stream
+  if(t>4.95&&t<6.62){const a=tilt*Math.PI/180;const sx=x+(-126*Math.cos(a)-(-52)*Math.sin(a)),sy=y+(-126*Math.sin(a)+(-52)*Math.cos(a));const ey=lv;const w=lerp(3,7,P(t,4.95,5.2))*(1-P(t,6.4,6.62));
+   o+=`<path d="M${sx} ${sy} Q${sx-30} ${sy+40} ${448} ${ey}" fill="none" stroke="#D9A441" stroke-width="${w}" stroke-linecap="round" opacity=".85"/>`}}
+ // syrup drops
+ if(t>7.0){[7.15,7.4,7.65].forEach(td=>{const k=P(t,td,td+0.32);if(k<=0||k>=1)return;const y=lerp(268,lv,k*k);o+=`<path d="M455 ${y-18} Q446 ${y-2} 455 ${y+6} Q464 ${y-2} 455 ${y-18}Z" fill="#B87318" stroke="${INK}" stroke-width="1.5"/><circle cx="452" cy="${y-2}" r="2" fill="#fff" opacity=".8"/>`});
+  const bk=eo(P(t,7.0,7.25))*(1-P(t,7.9,8.1));if(bk>0)o+=`<g opacity="${bk}" transform="translate(455 ${208})"><path d="M-22 -40 L22 -40 L18 34 Q0 46 -18 34 Z" fill="#FBEFD9" stroke="${INK}" stroke-width="2"/><path d="M-6 34 L-3 52 L3 52 L6 34" fill="#B87318" stroke="${INK}" stroke-width="1.5"/><text x="0" y="6" text-anchor="middle" font-family="${SERIF}" font-size="14" fill="${INK}">糖浆</text></g>`}
+ // ---------- glass outline (line-draw) ----------
+ const gd=draw(t,0.0,0.8);
+ o+=`<path d="M306 254 L336 606 Q338 614 346 614 L514 614 Q522 614 524 606 L554 254 Z" fill="url(#glass)" fill-opacity="${gd}" stroke="none"/>`;
+ o+=`<g filter="url(#rough)" fill="none" stroke="${INK}" stroke-width="2.2" stroke-linecap="round"><path d="M306 254 L336 606 Q338 614 346 614 L514 614 Q522 614 524 606 L554 254" pathLength="1" stroke-dasharray="1" stroke-dashoffset="${1-gd}"/><ellipse cx="430" cy="254" rx="124" ry="12" pathLength="1" stroke-dasharray="1" stroke-dashoffset="${1-gd}"/><path d="M326 300 L348 560" stroke="#fff" stroke-width="6" opacity="${gd*.8}"/><path d="M520 300 L512 380" stroke="#fff" stroke-width="3" opacity="${gd*.6}"/></g>`;
+ o+=`<ellipse cx="430" cy="626" rx="${150*gd}" ry="10" fill="#33404A" opacity=".08"/>`;
+ // straw top part outside cup (drawn above rim)
+ if(sk>0){const y=lerp(-420,0,sk);o+=`<g clip-path="url(#above)"></g>`;
+  o+=`<svg x="0" y="0" width="1280" height="256" overflow="hidden"><g transform="translate(${470} ${y+150}) rotate(14)"><rect x="-9" y="0" width="18" height="470" rx="6" fill="url(#straw)" stroke="${INK}" stroke-width="2"/></g></svg>`}
+ // ---------- step card ----------
+ const CX=800,CY=180,CW=410,CH=400;
+ let si=-1;for(let i=0;i<4;i++)if(t>=STEPS[i].t)si=i;
+ const fin=t>=8.2;
+ const cd=draw(t,0.15,0.75);
+ // flip: scaleY around card center at each step change
+ let flip=1,shownIdx=si;
+ for(let i=0;i<4;i++){const d=t-STEPS[i].t;if(d>=0&&d<0.3){flip=Math.abs(Math.cos(d/0.3*Math.PI));shownIdx=d<0.15?i-1:i}}
+ {const d=t-8.2;if(d>=0&&d<0.3){flip=Math.abs(Math.cos(d/0.3*Math.PI));}}
+ const showFinal=t>=8.35;
+ o+=`<g transform="translate(0 ${CY+CH/2}) scale(1 ${flip}) translate(0 ${-(CY+CH/2)})">`;
+ o+=`<rect x="${CX+8}" y="${CY+8}" width="${CW}" height="${CH}" rx="14" fill="#33404A" opacity="${0.08*cd}"/>`;
+ o+=`<rect x="${CX}" y="${CY}" width="${CW}" height="${CH}" rx="14" fill="#FFFDF8" fill-opacity="${cd}" stroke="${INK}" stroke-width="2" pathLength="1" stroke-dasharray="1" stroke-dashoffset="${1-cd}"/>`;
+ if(!showFinal&&shownIdx>=0){const S=STEPS[shownIdx];const k=eo(P(t,S.t+0.15,S.t+0.6));
+  o+=`<text x="${CX+30}" y="${CY+44}" font-family="${SANS}" font-weight="700" font-size="16" fill="${RED}" letter-spacing="3">STEP 0${shownIdx+1} / 04</text><line x1="${CX+30}" y1="60" x2="${CX+CW-30}" y2="60" stroke="${INK}" stroke-width="1" stroke-dasharray="3 4" transform="translate(0 ${CY})"/>`;
+  // rolling number
+  o+=`<g clip-path="url(#numclip)">`;
+  const prev=shownIdx>0?STEPS[shownIdx-1]:null;
+  if(prev&&k<1)o+=`<text x="${CX+30}" y="${CY+160-k*120}" font-family="${NUMF}" font-weight="700" font-size="120" fill="${INK}" opacity="${1-k}">${prev.n}</text>`;
+  o+=`<text x="${CX+30}" y="${CY+160+(1-k)*120}" font-family="${NUMF}" font-weight="700" font-size="120" fill="${INK}">${S.n}</text></g>`;
+  const nw={'150':190,'½':76,'300':200,'15':130}[S.n];
+  o+=`<text x="${CX+40+nw}" y="${CY+158}" font-family="${SANS}" font-size="34" fill="${INK}" opacity="${k}">${S.u}</text>`;
+  o+=`<text x="${CX+30}" y="${CY+222}" font-family="${SERIF}" font-weight="900" font-size="42" fill="${INK}" opacity="${eo(P(t,S.t+0.2,S.t+0.5))}">${S.name}</text>`;
+  const tk=eo(P(t,S.t+0.35,S.t+0.7));
+  o+=`<g opacity="${tk}" transform="translate(${(1-tk)*16} 0)"><rect x="${CX+30}" y="${CY+258}" width="${CW-60}" height="88" rx="10" fill="#F6EFE0"/><text x="${CX+48}" y="${CY+290}" font-family="${SANS}" font-weight="700" font-size="15" fill="${RED}">小贴士</text>`;
+  // wrap tip
+  const tip=S.tip;const lines=tip.length>16?[tip.slice(0,tip.indexOf('，')+1),tip.slice(tip.indexOf('，')+1)]:[tip];
+  lines.forEach((l,i)=>o+=`<text x="${CX+48}" y="${CY+318+i*24}" font-family="${SANS}" font-size="18" fill="${INK}">${l}</text>`);o+='</g>';
+ }
+ if(showFinal){const k=eo(P(t,8.35,8.75));
+  o+=`<g opacity="${k}"><text x="${CX+36}" y="${CY+70}" font-family="${SANS}" font-weight="800" font-size="18" fill="${RED}" letter-spacing="4">NEW · 4 STEPS</text>`;
+  o+=`<text x="${CX+30}" y="${CY+170+(1-k)*20}" font-family="${SERIF}" font-weight="900" font-size="76" fill="${RED}">山野柠檬茶</text>`;
+  o+=`<line x1="${CX+36}" y1="${CY+200}" x2="${CX+36+330*k}" y2="${CY+200}" stroke="${INK}" stroke-width="1.5"/>`;
+  o+=`<text x="${CX+36}" y="${CY+246}" font-family="${SANS}" font-size="26" fill="${INK}" letter-spacing="2">4 步 · 1 分钟出杯</text></g>`;
+  if(t>=9.0){const pk=eob(P(t,9.0,9.3));o+=`<g transform="translate(${CX+36} ${CY+300}) scale(${pk})"><rect x="0" y="0" width="210" height="56" rx="28" fill="${RED}"/><text x="105" y="38" text-anchor="middle" font-family="${SANS}" font-weight="800" font-size="26" fill="#fff">¥16 · 中杯</text></g>`}}
+ o+='</g>';
+ // step dots
+ const dd=P(t,0.4,0.8);
+ for(let i=0;i<4;i++){const x=CX+CW/2-120+i*80,y=CY+CH+56;const act=fin?true:i<=si;const cur=!fin&&i==si;
+  if(i<3)o+=`<line x1="${x+12}" y1="${y}" x2="${x+68}" y2="${y}" stroke="${INK}" stroke-width="1.5" stroke-dasharray="3 4" opacity="${dd}"/>`;
+  o+=`<circle cx="${x}" cy="${y}" r="${cur?11:8}" fill="${act?RED:'#FBF8F1'}" stroke="${INK}" stroke-width="2" opacity="${dd}"/><text x="${x}" y="${y+34}" text-anchor="middle" font-family="${SANS}" font-size="14" fill="${INK}" opacity="${dd*(act?1:.5)}">${['冰块','柠檬','绿茶','糖浆'][i]}</text>`}
+ // progress pointer
+ if(si>=0&&!fin){const prevX=CX+CW/2-120+Math.max(0,si-1)*80,curX=CX+CW/2-120+si*80;const k=eob(P(t,STEPS[si].t,STEPS[si].t+0.4));const x=lerp(si?prevX:curX,curX,k);o+=`<path d="M${x-7} ${CY+CH+28} L${x+7} ${CY+CH+28} L${x} ${CY+CH+38}Z" fill="${RED}"/>`}
+ // stamp
+ if(t>=8.6){const k=P(t,8.6,8.85);const s=lerp(1.8,1,eo(k));const sx=1090,sy=170;
+  o+=`<g transform="translate(${sx} ${sy}) rotate(-16) scale(${s})" opacity="${cl(k*3)*0.92}" style="mix-blend-mode:multiply" filter="url(#rough)"><circle r="78" fill="none" stroke="${RED}" stroke-width="6"/><circle r="66" fill="none" stroke="${RED}" stroke-width="2.5"/><text y="-6" text-anchor="middle" font-family="${SERIF}" font-weight="900" font-size="40" fill="${RED}" letter-spacing="4">新品</text><text y="38" text-anchor="middle" font-family="${SERIF}" font-weight="900" font-size="34" fill="${RED}" letter-spacing="6">上市</text><text y="-46" text-anchor="middle" font-family="${SANS}" font-size="11" font-weight="700" fill="${RED}" letter-spacing="2">★ 2026 ★</text></g>`}
+ // corner meta
+ o+=`<text x="84" y="672" font-family="${SANS}" font-size="13" fill="${INK}" opacity=".55" letter-spacing="2">RECIPE CARD · Nº 07 · 暴打柠檬茶系列</text>`;
+ // loop fade
+ const f=P(t,9.6,10);if(f>0)o+=`<rect width="1280" height="720" fill="#FBF8F1" opacity="${eio(f)}"/>`;
+ document.getElementById('dyn').innerHTML=o;
+}
+const q=new URLSearchParams(location.search);const FT=q.has('t')?parseFloat(q.get('t')):null;let t0=null;
+function loop(now){if(t0===null)t0=now;const t=FT!==null?FT:((now-t0)/1000)%DUR;frame(t);if(FT===null)requestAnimationFrame(loop)}
+(document.fonts?document.fonts.ready:Promise.resolve()).then(()=>requestAnimationFrame(loop));
+</script><!-- backlink -->
+<a id="m15back" href="../" style="position:fixed;left:14px;top:12px;z-index:99999;padding:6px 12px;border-radius:999px;background:rgba(10,10,14,.55);color:#fff;font:500 13px/1.2 -apple-system,'PingFang SC','Noto Sans CJK SC',sans-serif;text-decoration:none;backdrop-filter:blur(6px);opacity:0;transition:opacity .35s;pointer-events:none">← 返回总览</a>
+<script>(function(){if(new URLSearchParams(location.search).has('t'))return;var a=document.getElementById('m15back'),h;function s(){a.style.opacity=1;a.style.pointerEvents='auto';clearTimeout(h);h=setTimeout(function(){a.style.opacity=0;a.style.pointerEvents='none'},2200)}addEventListener('mousemove',s);addEventListener('touchstart',s)})();</script>
+</body></html>
