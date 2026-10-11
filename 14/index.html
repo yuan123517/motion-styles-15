@@ -190,14 +190,16 @@ function draw(t){
   let ac=null, master=null, bgmGain=null, sfxGain=null;
   let unlocked=false, padStarted=false, prevT=-1, loopEpoch=0;
   const fired=new Set();
+  const listeners=[];
 
   function ensureCtx(){
     if(ac) return ac;
     const Ctx=window.AudioContext||window.webkitAudioContext;
     ac=new Ctx();
-    master=ac.createGain(); master.gain.value=0.9; master.connect(ac.destination);
-    bgmGain=ac.createGain(); bgmGain.gain.value=0.042; bgmGain.connect(master); // ~ -27.5 dB cushion
-    sfxGain=ac.createGain(); sfxGain.gain.value=0.38; sfxGain.connect(master);
+    master=ac.createGain(); master.gain.value=1.0; master.connect(ac.destination);
+    // Audible but soft: BGM ~ -16 dB, SFX ~ -4 dB relative
+    bgmGain=ac.createGain(); bgmGain.gain.value=0.22; bgmGain.connect(master);
+    sfxGain=ac.createGain(); sfxGain.gain.value=0.85; sfxGain.connect(master);
     return ac;
   }
 
@@ -210,95 +212,109 @@ function draw(t){
     p.exponentialRampToValueAtTime(0.0001,t0+a+d+r);
   }
 
-  function tone(freq,t0,dur,type,peak){
-    const o=ac.createOscillator(), g=ac.createGain();
+  function tone(ctx,dest,freq,t0,dur,type,peak){
+    const o=ctx.createOscillator(), g=ctx.createGain();
     o.type=type||'sine'; o.frequency.setValueAtTime(freq,t0);
     env(g,t0,Math.min(0.012,dur*0.2),dur*0.25,0.45,Math.max(0.04,dur*0.55),peak);
-    o.connect(g); g.connect(sfxGain);
+    o.connect(g); g.connect(dest);
     o.start(t0); o.stop(t0+dur+0.1);
   }
 
-  function noiseBuf(sec){
-    const n=Math.max(1,Math.floor(ac.sampleRate*sec));
-    const b=ac.createBuffer(1,n,ac.sampleRate), d=b.getChannelData(0);
+  function noiseBuf(ctx,sec){
+    const n=Math.max(1,Math.floor(ctx.sampleRate*sec));
+    const b=ctx.createBuffer(1,n,ctx.sampleRate), d=b.getChannelData(0);
     for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*0.85;
     return b;
   }
 
-  function noiseBurst(t0,dur,peak,hp,lp){
-    const src=ac.createBufferSource(); src.buffer=noiseBuf(Math.max(dur,0.05));
-    const f1=ac.createBiquadFilter(); f1.type='highpass'; f1.frequency.value=hp||400;
-    const f2=ac.createBiquadFilter(); f2.type='lowpass'; f2.frequency.value=lp||2800;
-    const g=ac.createGain();
+  function noiseBurst(ctx,dest,t0,dur,peak,hp,lp){
+    const src=ctx.createBufferSource(); src.buffer=noiseBuf(ctx,Math.max(dur,0.05));
+    const f1=ctx.createBiquadFilter(); f1.type='highpass'; f1.frequency.value=hp||400;
+    const f2=ctx.createBiquadFilter(); f2.type='lowpass'; f2.frequency.value=lp||2800;
+    const g=ctx.createGain();
     env(g,t0,0.004,dur*0.2,0.3,dur*0.75,peak);
-    src.connect(f1); f1.connect(f2); f2.connect(g); g.connect(sfxGain);
+    src.connect(f1); f1.connect(f2); f2.connect(g); g.connect(dest);
     src.start(t0); src.stop(t0+dur+0.05);
   }
 
-  function click(t0,peak){
-    tone(920,t0,0.045,'triangle',peak*0.55);
-    tone(1840,t0,0.028,'sine',peak*0.22);
-    noiseBurst(t0,0.025,peak*0.16,1200,5200);
+  function click(ctx,dest,t0,peak){
+    tone(ctx,dest,920,t0,0.045,'triangle',peak*0.55);
+    tone(ctx,dest,1840,t0,0.028,'sine',peak*0.22);
+    noiseBurst(ctx,dest,t0,0.025,peak*0.16,1200,5200);
   }
-  function softTick(t0,peak){
-    tone(1380,t0,0.032,'sine',peak*0.32);
-    tone(2100,t0,0.02,'triangle',peak*0.1);
+  function softTick(ctx,dest,t0,peak){
+    tone(ctx,dest,1380,t0,0.032,'sine',peak*0.32);
+    tone(ctx,dest,2100,t0,0.02,'triangle',peak*0.1);
   }
-  function chime(t0,freq,peak){
-    tone(freq,t0,0.26,'sine',peak);
-    tone(freq*2.005,t0,0.2,'sine',peak*0.26);
-    tone(freq*3.0,t0,0.14,'triangle',peak*0.08);
+  function chime(ctx,dest,t0,freq,peak){
+    tone(ctx,dest,freq,t0,0.26,'sine',peak);
+    tone(ctx,dest,freq*2.005,t0,0.2,'sine',peak*0.26);
+    tone(ctx,dest,freq*3.0,t0,0.14,'triangle',peak*0.08);
   }
-  function whoosh(t0){
-    noiseBurst(t0,0.3,0.08,160,1500);
-    const o=ac.createOscillator(), g=ac.createGain();
+  function whoosh(ctx,dest,t0){
+    noiseBurst(ctx,dest,t0,0.3,0.08,160,1500);
+    const o=ctx.createOscillator(), g=ctx.createGain();
     o.type='sine';
     o.frequency.setValueAtTime(210,t0);
     o.frequency.exponentialRampToValueAtTime(85,t0+0.28);
     env(g,t0,0.02,0.08,0.35,0.2,0.035);
-    o.connect(g); g.connect(sfxGain);
+    o.connect(g); g.connect(dest);
     o.start(t0); o.stop(t0+0.36);
   }
-  function resolve(t0){
-    chime(t0,440,0.085);
-    chime(t0+0.1,554.37,0.07);
-    chime(t0+0.22,659.25,0.1);
+  function resolve(ctx,dest,t0){
+    chime(ctx,dest,t0,440,0.085);
+    chime(ctx,dest,t0+0.1,554.37,0.07);
+    chime(ctx,dest,t0+0.22,659.25,0.1);
   }
 
-  function startPad(){
-    if(padStarted) return;
-    padStarted=true;
-    const chord=[220.00,277.18,329.63,392.00]; // warm A–C#–E–G
-    const now=ac.currentTime;
+  function playOn(ctx,dest,name,when){
+    switch(name){
+      case 'mic': click(ctx,dest,when,0.2); softTick(ctx,dest,when+0.015,0.09); break;
+      case 'rec': softTick(ctx,dest,when,0.055); tone(ctx,dest,640,when,0.05,'sine',0.03); break;
+      case 'save': click(ctx,dest,when,0.17); chime(ctx,dest,when+0.025,523.25,0.065); break;
+      case 'type': softTick(ctx,dest,when,0.038); break;
+      case 'hl0': chime(ctx,dest,when,659.25,0.075); break;
+      case 'hl1': chime(ctx,dest,when,783.99,0.065); break;
+      case 'hl2': chime(ctx,dest,when,987.77,0.07); break;
+      case 'whoosh': whoosh(ctx,dest,when); break;
+      case 'land': softTick(ctx,dest,when,0.085); tone(ctx,dest,392,when,0.07,'triangle',0.045); break;
+      case 'check': click(ctx,dest,when,0.15); chime(ctx,dest,when+0.02,587.33,0.075); break;
+      case 'panel': noiseBurst(ctx,dest,when,0.11,0.045,280,2100); tone(ctx,dest,330,when,0.16,'sine',0.055); tone(ctx,dest,495,when+0.04,0.14,'sine',0.04); break;
+      case 'done': resolve(ctx,dest,when); break;
+    }
+  }
+
+  function startPad(ctx,dest,t0,dur){
+    const chord=[220.00,277.18,329.63,392.00];
+    const end=t0+(dur||20);
     chord.forEach((f,i)=>{
-      const o=ac.createOscillator(), o2=ac.createOscillator();
-      const g=ac.createGain(), lp=ac.createBiquadFilter(), harm=ac.createGain();
+      const o=ctx.createOscillator(), o2=ctx.createOscillator();
+      const g=ctx.createGain(), lp=ctx.createBiquadFilter(), harm=ctx.createGain();
       o.type='sine'; o2.type='sine';
       o.frequency.value=f; o2.frequency.value=f*2.0;
       harm.gain.value=0.35;
       lp.type='lowpass'; lp.frequency.value=700+i*50; lp.Q.value=0.35;
-      const base=0.17/(1.15+i*0.55);
-      g.gain.setValueAtTime(0.0001,now);
-      g.gain.exponentialRampToValueAtTime(base,now+1.8);
+      const base=0.22/(1.1+i*0.5);
+      g.gain.setValueAtTime(0.0001,t0);
+      g.gain.exponentialRampToValueAtTime(base,t0+1.2);
+      g.gain.setValueAtTime(base,Math.max(t0+1.2,end-0.8));
+      g.gain.exponentialRampToValueAtTime(0.0001,end);
       o.connect(lp); o2.connect(harm); harm.connect(lp);
-      lp.connect(g); g.connect(bgmGain);
-      o.start(now); o2.start(now);
+      lp.connect(g); g.connect(dest);
+      o.start(t0); o2.start(t0);
+      o.stop(end+0.05); o2.stop(end+0.05);
     });
-    function pulse(){
-      if(!unlocked||!ac) return;
-      const t0=ac.currentTime+0.01;
-      const src=ac.createBufferSource(); src.buffer=noiseBuf(0.1);
-      const bp=ac.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=165; bp.Q.value=2.4;
-      const g=ac.createGain();
-      env(g,t0,0.008,0.035,0.3,0.07,0.055);
-      src.connect(bp); bp.connect(g); g.connect(bgmGain);
-      src.start(t0); src.stop(t0+0.12);
+    // soft heartbeat ticks on BGM
+    for(let t=0.45;t<end;t+=1.25){
+      const src=ctx.createBufferSource(); src.buffer=noiseBuf(ctx,0.1);
+      const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=165; bp.Q.value=2.4;
+      const g=ctx.createGain();
+      env(g,t,0.008,0.035,0.3,0.07,0.045);
+      src.connect(bp); bp.connect(g); g.connect(dest);
+      src.start(t); src.stop(t+0.12);
     }
-    setInterval(pulse,1250);
-    setTimeout(pulse,450);
   }
 
-  // Visual-aligned cue list (loop-relative seconds)
   const EVENTS=[
     [1.25,'mic'],
     [1.55,'rec'],[1.90,'rec'],[2.25,'rec'],
@@ -315,20 +331,7 @@ function draw(t){
 
   function play(name,when){
     if(when < ac.currentTime - 0.02) when=ac.currentTime;
-    switch(name){
-      case 'mic': click(when,0.2); softTick(when+0.015,0.09); break;
-      case 'rec': softTick(when,0.055); tone(640,when,0.05,'sine',0.03); break;
-      case 'save': click(when,0.17); chime(when+0.025,523.25,0.065); break;
-      case 'type': softTick(when,0.038); break;
-      case 'hl0': chime(when,659.25,0.075); break;
-      case 'hl1': chime(when,783.99,0.065); break;
-      case 'hl2': chime(when,987.77,0.07); break;
-      case 'whoosh': whoosh(when); break;
-      case 'land': softTick(when,0.085); tone(392,when,0.07,'triangle',0.045); break;
-      case 'check': click(when,0.15); chime(when+0.02,587.33,0.075); break;
-      case 'panel': noiseBurst(when,0.11,0.045,280,2100); tone(330,when,0.16,'sine',0.055); tone(495,when+0.04,0.14,'sine',0.04); break;
-      case 'done': resolve(when); break;
-    }
+    playOn(ac,sfxGain,name,when);
   }
 
   function scheduleFrom(t){
@@ -347,23 +350,43 @@ function draw(t){
     if(prevT>=0 && t<prevT-1){
       loopEpoch++;
       fired.clear();
-      scheduleFrom(t);
-    } else if(prevT<0){
-      scheduleFrom(t);
-    } else {
-      scheduleFrom(t);
     }
+    scheduleFrom(t);
     prevT=t;
   }
 
+  function detachListeners(){
+    while(listeners.length){
+      const [ev,fn]=listeners.pop();
+      try{ removeEventListener(ev,fn); }catch(e){}
+    }
+  }
+
   async function unlock(){
-    if(FROZEN||unlocked) return;
+    if(FROZEN||unlocked) return true;
     ensureCtx();
-    try{ await ac.resume(); }catch(e){}
+    try{
+      if(ac.state!=='running') await ac.resume();
+    }catch(e){}
+    // Some browsers need a second resume after gesture
+    try{
+      if(ac.state!=='running') await ac.resume();
+    }catch(e){}
+    if(ac.state!=='running'){
+      const h=document.getElementById('m15snd');
+      if(h) h.textContent='再点一次开启声音';
+      return false;
+    }
     unlocked=true;
-    startPad();
+    detachListeners();
+    if(!padStarted){
+      padStarted=true;
+      startPad(ac,bgmGain,ac.currentTime,60);
+    }
     prevT=-1; loopEpoch++; fired.clear();
     hideHint();
+    // kick schedule on next visual tick
+    return true;
   }
 
   function hideHint(){
@@ -376,21 +399,41 @@ function draw(t){
   function showHint(){
     if(FROZEN||document.getElementById('m15snd')) return;
     const h=document.createElement('div');
-    h.id='m15snd'; h.textContent='点击开启声音'; h.setAttribute('role','button');
-    h.style.cssText='position:fixed;right:14px;bottom:14px;z-index:99999;padding:7px 14px;border-radius:999px;background:rgba(21,20,43,.62);color:#fff;font:500 13px/1.2 Inter,-apple-system,"PingFang SC",sans-serif;backdrop-filter:blur(8px);cursor:pointer;user-select:none;transition:opacity .35s;box-shadow:0 6px 18px rgba(0,0,0,.16)';
-    h.addEventListener('click',function(e){e.stopPropagation();unlock();});
+    h.id='m15snd'; h.textContent='🔊 点击开启声音'; h.setAttribute('role','button');
+    h.style.cssText='position:fixed;right:14px;bottom:14px;z-index:99999;padding:10px 16px;border-radius:999px;background:rgba(21,20,43,.78);color:#fff;font:600 14px/1.2 Inter,-apple-system,"PingFang SC",sans-serif;backdrop-filter:blur(8px);cursor:pointer;user-select:none;transition:opacity .35s;box-shadow:0 8px 22px rgba(0,0,0,.22)';
+    h.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();unlock();});
     document.body.appendChild(h);
+  }
+
+  // Offline render for MP4 export: returns Float32Array mono @ sampleRate
+  async function renderOffline(seconds){
+    const sr=48000;
+    const len=Math.floor(sr*(seconds||10));
+    const off=new OfflineAudioContext(1,len,sr);
+    const masterG=off.createGain(); masterG.gain.value=1.0; masterG.connect(off.destination);
+    const bg=off.createGain(); bg.gain.value=0.22; bg.connect(masterG);
+    const fx=off.createGain(); fx.gain.value=0.85; fx.connect(masterG);
+    startPad(off,bg,0,seconds||10);
+    for(const [et,name] of EVENTS){
+      if(et < (seconds||10)) playOn(off,fx,name,et);
+    }
+    const buf=await off.startRendering();
+    return {sampleRate:sr, length:buf.length, channel:Array.from(buf.getChannelData(0))};
   }
 
   window.__m15AudioTick=audioTick;
   window.__m15AudioUnlock=unlock;
+  window.__m15RenderAudio=renderOffline;
+  window.__m15Draw=typeof draw==='function'?draw:null;
 
   if(!FROZEN){
     showHint();
-    const once=()=>unlock();
-    ['pointerdown','keydown','touchstart'].forEach(ev=>addEventListener(ev,once,{passive:true}));
-    ensureCtx();
-    ac.resume().catch(()=>{});
+    const once=()=>{unlock();};
+    ['pointerdown','keydown','touchstart','click'].forEach(ev=>{
+      addEventListener(ev,once,{passive:true});
+      listeners.push([ev,once]);
+    });
+    // Do NOT create AudioContext until gesture — avoids permanent suspend on some browsers
   }
 })();
 startLoop(draw,['800 58px Inter','italic 60px "Instrument Serif"','700 13px "JetBrains Mono"']);
